@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func main() {
 	var (
@@ -13,7 +16,11 @@ func main() {
 	fmt.Println("Введите, сколько раз эта фраза должна звучать:")
 	fmt.Scan(&quantity)
 
+	var array []string
+
 	for i := 0; i < quantity; i++ {
-		fmt.Printf("%s\n", frase)
+		array = append(array, frase)
 	}
+
+	fmt.Println(strings.Join(array, "\n"))
 }
