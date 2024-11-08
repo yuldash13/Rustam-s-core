@@ -7,9 +7,8 @@ import (
 func main() {
 	var array []int
 
-	for i := 5; i < 103; {
+	for i := 5; i < 103; i += 7 {
 		array = append(array, i)
-		i += 7
 	}
 
 	fmt.Println(array)
