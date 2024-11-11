@@ -8,6 +8,7 @@
       <change afterPath="$PROJECT_DIR$/Task_16/main.go" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Task_16/readme.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Task_15/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/Task_15/main.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,13 +96,19 @@
       <filePath value="$PROJECT_DIR$/Task_7/main.go" />
       <method v="2" />
     </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="Roman_Sakutin" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
+      <package value="Roman_Sakutin" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Build.go build main.go (1)" />
         <item itemvalue="Go Build.go build Roman_Sakutin/Task_16" />
-        <item itemvalue="Go Build.go build Roman_Sakutin/Task_8" />
-        <item itemvalue="Go Build.go build Roman_Sakutin/Task_3" />
-        <item itemvalue="Go Build.go build main.go" />
       </list>
     </recent_temporary>
   </component>
