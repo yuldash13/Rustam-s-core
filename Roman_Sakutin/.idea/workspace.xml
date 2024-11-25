@@ -5,6 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2ae03f05-4f26-4b45-ae53-f46f274a3353" name="Changes" comment="xml">
+      <change afterPath="$PROJECT_DIR$/Task_19/main.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Task_19/readme.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/SuperTask/.idea/.gitignore" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/SuperTask/.idea/SuperTask.iml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/SuperTask/.idea/modules.xml" afterDir="false" />
@@ -55,6 +58,9 @@
     "RunOnceActivity.go.migrated.go.modules.settings": "true",
     "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
     "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "Task__19",
+    "go.import.settings.migrated": "true",
+    "last_opened_file_path": "C:/gestko programiruyu/Rustam-s-core/Roman_Sakutin",
     "git-widget-placeholder": "Car",
     "go.import.settings.migrated": "true",
     "ignore.virus.scanning.warn.message": "true",
@@ -63,6 +69,14 @@
     "node.js.selected.package.eslint": "(autodetect)"
   }
 }]]></component>
+  <component name="RunManager" selected="Go Build.go build Roman_Sakutin/Task_19">
+    <configuration name="go build Roman_Sakutin/Task_19" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="Roman_Sakutin" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="Roman_Sakutin/Task_19" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/Task_19/main.go" />
   <component name="RunManager" selected="Go Build.go build main.go">
     <configuration name="go build Roman_Sakutin/Task_17" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="Roman_Sakutin" />
@@ -119,6 +133,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Build.go build Roman_Sakutin/Task_19" />
+        <item itemvalue="Go Build.go build Roman_Sakutin/Task_8" />
+        <item itemvalue="Go Build.go build Roman_Sakutin/Task_3" />
+        <item itemvalue="Go Build.go build main.go" />
+        <item itemvalue="Go Build.go build Roman_Sakutin/Task_7" />
         <item itemvalue="Go Build.go build main.go" />
         <item itemvalue="Go Build.go build main.go (2)" />
         <item itemvalue="Go Build.go build Roman_Sakutin/Task_17" />
