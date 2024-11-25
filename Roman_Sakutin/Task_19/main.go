@@ -15,8 +15,8 @@ func main() {
 		fmt.Println(row)
 	}
 
-	multiOne = array[0][0]
-	for j := 1; j < len(array); j++ {
+	multiOne = 1
+	for j := 0; j < len(array); j++ {
 		multiOne *= array[j][0]
 	}
 
