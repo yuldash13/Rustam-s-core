@@ -50,6 +50,20 @@
     &quot;last_opened_file_path&quot;: &quot;C:/gestko programiruyu/Rustam-s-core&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultGoTemplateProperty": "Go File",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "Task__22",
+    "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
+    "last_opened_file_path": "C:/gestko programiruyu/Rustam-s-core",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)"
   }
 }</component>
   <component name="RecentsManager">
@@ -66,6 +80,7 @@
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
+  <component name="RunManager" selected="Go Build.go build Roman_Sakutin/Roman_Sakutin/3-Array/Task_22">
     <configuration name="go build Roman_Sakutin/Roman_Sakutin/2)For/Task_9" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="Rustam-s-core" />
       <working_directory value="$PROJECT_DIR$" />
@@ -93,6 +108,15 @@
       <filePath value="$PROJECT_DIR$/Roman_Sakutin/3-Array/Task_26/main.go" />
       <method v="2" />
     </configuration>
+    <configuration name="go build Roman_Sakutin/Roman_Sakutin/3-Array/Task_22" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="Rustam-s-core" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="Roman_Sakutin/Roman_Sakutin/3-Array/Task_22" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/Roman_Sakutin/3-Array/Task_22/main.go" />
+      <method v="2" />
+    </configuration>
     <configuration name="go build Roman_Sakutin/Roman_Sakutin/3)Array/Task_20" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="Rustam-s-core" />
       <working_directory value="$PROJECT_DIR$" />
@@ -102,19 +126,15 @@
       <filePath value="$PROJECT_DIR$/Roman_Sakutin/3)Array/Task_20/main.go" />
       <method v="2" />
     </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="Rustam-s-core" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
     <configuration name="go build Roman_Sakutin/Roman_Sakutin/SuperTask/Snake" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="Rustam-s-core" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
       <package value="Roman_Sakutin/Roman_Sakutin/SuperTask/Snake" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$/Roman_Sakutin/SuperTask/Snake/main.go" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
-      <module name="Rustam-s-core" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="DIRECTORY" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
