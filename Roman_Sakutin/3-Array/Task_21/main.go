@@ -8,43 +8,25 @@ import (
 
 const (
 	n = 9
+	m = 30
 )
 
 func main() {
 	var (
-		array [30]int
+		array = make([]int, 0, m)
 	)
 
 	rand.Seed(time.Now().UnixNano())
-	for i := 0; i < len(array); i++ {
+	for i := 0; i < m; i++ {
 		randomNum := rand.Intn(n) + 1
-		array[i] = randomNum
+		array = append(array, randomNum)
 	}
 
 	fmt.Println(array)
 
-	var (
-		a = 0
-		b = 1
-		c = 2
-	)
-	for {
-		if a == 0 {
-			if array[a] > array[b] {
-				fmt.Println(array[a])
-			}
+	for i := 0; i < len(array); i++ {
+		if (i == len(array)-1 || array[i] > array[i+1]) && (i == 0 || array[i] > array[i-1]) {
+			fmt.Println(array[i])
 		}
-		if array[b] > array[a] && array[b] > array[c] {
-			fmt.Println(array[b])
-		}
-		if c == len(array)-1 {
-			if array[c] > array[b] {
-				fmt.Println(array[c])
-			}
-			break
-		}
-		a++
-		b++
-		c++
 	}
 }
