@@ -21,28 +21,12 @@ func main() {
 		array[i] = randomNum
 	}
 	fmt.Println(array)
-
 	var (
-		finalNum, maxQuantity, curNum int
-		i                             = 1
-		quantity                      = 1
-		num                           = array[0]
+		quantity              = 1
+		maxQuantity, finalNum int
 	)
-	for {
-		curNum = array[i]
-		if num == curNum {
-			quantity++
-			i++
-			if quantity > maxQuantity {
-				finalNum = curNum
-				maxQuantity = quantity
-			}
-		} else {
-			quantity = 1
-			num = array[i]
-			i++
-		}
-		if i == len(array) {
+	for i := 0; i < len(array); i++ {
+		if i == len(array)-1 {
 			if maxQuantity == 0 {
 				fmt.Println("В этом массиве нет повторяющихся чисел")
 				break
@@ -50,6 +34,15 @@ func main() {
 			fmt.Printf("Часто повторяющееся число: %d\n", finalNum)
 			fmt.Printf("Сколько раз повторяется: %d\n", maxQuantity)
 			break
+		}
+		if array[i] == array[i+1] {
+			quantity++
+			if quantity > maxQuantity {
+				maxQuantity = quantity
+				finalNum = array[i]
+			}
+		} else {
+			quantity = 1
 		}
 	}
 }
