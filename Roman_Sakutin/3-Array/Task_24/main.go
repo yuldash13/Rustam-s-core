@@ -19,28 +19,18 @@ func main() {
 		array[i] = randomNum
 	}
 	fmt.Println(array)
-
-	var (
-		curNum, num, i int
-		finalArray     [10]int
-	)
-
-	for {
-		curNum = array[i]
-		num = array[i+1]
-		if curNum > num {
-			array[i], array[i+1] = array[i+1], array[i]
-			i++
-		} else {
-			i++
+	var m int
+	for i := 0; ; i++ {
+		if m == 10 {
+			fmt.Println(array)
+			break
 		}
 		if i == len(array)-1 {
-			if array == finalArray {
-				break
-			}
-			finalArray = array
-			fmt.Println(array)
+			m++
 			i = 0
+		}
+		if array[i] > array[i+1] {
+			array[i], array[i+1] = array[i+1], array[i]
 		}
 	}
 }
