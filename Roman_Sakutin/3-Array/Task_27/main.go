@@ -7,8 +7,8 @@ import (
 
 func main() {
 	var (
-		bracket           string
-		depth, balance, n int
+		bracket        string
+		depth, balance int
 	)
 
 	fmt.Println("Введите скобочное выражение:")
@@ -16,27 +16,21 @@ func main() {
 
 	array := strings.Split(bracket, "")
 
-	for _, line := range array {
-		if line == "(" {
-			balance++
-			if balance > depth {
-				depth = balance
-			}
-		} else if line == ")" {
-			balance--
-		}
+	for i := 0; i < len(array); i++ {
 		if balance == -1 {
 			depth = 0
 			balance = 0
 			fmt.Println("Вы ввели выражение неверно")
 			return
 		}
-
-		if n == len(array)-1 {
-			fmt.Printf("Ваше скобочное выражение: %v\nГлубина выражения: %d", bracket, depth)
-			return
+		if array[i] == "(" {
+			balance++
+			if balance > depth {
+				depth = balance
+			}
+		} else if array[i] == ")" {
+			balance--
 		}
-		n++
 	}
 
 	if balance > 0 {
@@ -45,4 +39,6 @@ func main() {
 		fmt.Println("Вы ввели выражение неверно")
 		return
 	}
+
+	fmt.Printf("Ваше скобочное выражение: %v\nГлубина выражения: %d", bracket, depth)
 }
