@@ -5,28 +5,21 @@ import "fmt"
 func main() {
 	array := []int{1, 2, 3, 4, 5}
 
-	var (
-		i, position, n, a int
-	)
+	var n int
 
 	fmt.Println(array)
-	fmt.Println("На сколько позиций влево вы хотите сдвинуть цифры?")
-	fmt.Scan(&position)
+	fmt.Println("На сколько позиций влево вы хотите сдвинуть массив?")
+	fmt.Scan(&n)
 
-	for {
-		array[i], array[i+1] = array[i+1], array[i]
-		i++
-		a++
-		if a == 4 {
-			fmt.Println(array)
-			a = 0
-			n++
-		}
-		if i == len(array)-1 {
-			i = 0
-		}
-		if n == position {
-			break
-		}
+	if n > 5 {
+		fmt.Println("Максимальное значение на которое можно сдвинуть массив - 5.")
+		fmt.Println("На сколько позиций влево вы хотите сдвинуть массив?")
+		fmt.Scan(&n)
 	}
+
+	slice1 := array[n:5]
+	slice2 := array[0:n]
+	array = append(slice1, slice2...)
+
+	fmt.Println(array)
 }
