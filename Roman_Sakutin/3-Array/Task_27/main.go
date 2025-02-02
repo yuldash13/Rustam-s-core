@@ -18,10 +18,7 @@ func main() {
 
 	for i := 0; i < len(array); i++ {
 		if balance == -1 {
-			depth = 0
-			balance = 0
-			fmt.Println("Вы ввели выражение неверно")
-			return
+			break
 		}
 		if array[i] == "(" {
 			balance++
@@ -33,12 +30,9 @@ func main() {
 		}
 	}
 
-	if balance > 0 {
-		depth = 0
-		balance = 0
+	if balance == 0 {
+		fmt.Printf("Ваше скобочное выражение: %v\nГлубина выражения: %d", bracket, depth)
+	} else {
 		fmt.Println("Вы ввели выражение неверно")
-		return
 	}
-
-	fmt.Printf("Ваше скобочное выражение: %v\nГлубина выражения: %d", bracket, depth)
 }
