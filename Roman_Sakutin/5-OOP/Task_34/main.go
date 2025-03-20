@@ -4,8 +4,12 @@ import (
 	"fmt"
 )
 
-type character struct {
-	name   string
+type Character struct {
+	name string
+	Drawer
+}
+
+type Drawer struct {
 	symbol string
 	x      int
 	y      int
@@ -28,7 +32,16 @@ func main() {
 		if answer == "Нет" || answer == "нет" {
 			break
 		} else if answer == "Да" || answer == "да" {
-			info := saveCharacter(createCharacter(field))
+			fmt.Println("Создайте своего персонажа:")
+			fmt.Println("1)Введите имя:\n2)Выберите обозначение персонажа (#/$/&):\n3)Введите свои координаты (x,y=1-5):")
+			showField(field)
+			var (
+				name, symbol string
+				x, y         int
+			)
+			fmt.Scan(&name, &symbol, &x, &y)
+			newDrawer := NewDrawer(symbol, x, y)
+			info := saveCharacter(NewCharacter(name,*newDrawer))
 			showCharacter(info, field)
 		} else {
 			fmt.Println("Вы ввели что-то неверно.")
@@ -36,26 +49,22 @@ func main() {
 	}
 }
 
-func createCharacter(field [][]string) character {
-	var (
-		person character
-	)
-	fmt.Println("Создайте своего персонажа:")
-	fmt.Println("1)Введите имя:\n2)Выберите обозначение персонажа (#/$/&):\n3)Введите свои координаты (x,y=1-5):")
-	showField(field)
-	fmt.Scan(&person.name, &person.symbol, &person.x, &person.y)
-	if field[person.y][person.x] == "#" || field[person.y][person.x] == "$" || field[person.y][person.x] == "&" {
-		fmt.Println("Здесь уже стоит другой игрок.")
-		createCharacter(field)
-	}
-	if field[person.y][person.x] == "|" || field[person.y][person.x] == "-" {
-		fmt.Println("Здесь нельзя встать.")
-		createCharacter(field)
-	}
-	return person
+func NewCharacter(name string, drawer Drawer) *Character {
+	return &Character{name: name, Drawer: drawer}
 }
 
-func showCharacter(info map[string]character, field [][]string) {
+func NewDrawer(symbol string, x, y int) *Drawer{
+	return &Drawer{symbol: symbol, x: x, y: y}
+}
+
+func saveCharacter(c *Character) map[string]Character {
+	info := map[string]Character{
+		c.name: *c,
+	}
+	return info
+}
+
+func showCharacter(info map[string]Character, field [][]string) {
 	for {
 		fmt.Println("Ниже представлены все созданные персонажи. Кого хотите посмотреть?")
 		for key := range info {
@@ -67,11 +76,11 @@ func showCharacter(info map[string]character, field [][]string) {
 		key, exists := info[person]
 		if exists {
 			fmt.Printf("Имя: %v\n", key.name)
-			fmt.Printf("Обозначение: %v\n", key.symbol)
-			fmt.Printf("Координата x: %v\n", key.x)
-			fmt.Printf("Координата y: %v\n", key.y)
+			fmt.Printf("Обозначение: %v\n", key.Drawer.symbol)
+			fmt.Printf("Координата x: %v\n", key.Drawer.x)
+			fmt.Printf("Координата y: %v\n", key.Drawer.y)
 
-			field[key.y][key.x] = key.symbol
+			field[key.Drawer.y][key.Drawer.x] = key.Drawer.symbol
 			showField(field)
 		} else if person == "Никого" {
 			break
@@ -87,9 +96,3 @@ func showField(field [][]string) {
 	}
 }
 
-func saveCharacter(person character) map[string]character {
-	info := map[string]character{
-		person.name: person,
-	}
-	return info
-}
