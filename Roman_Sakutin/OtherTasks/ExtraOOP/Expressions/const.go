@@ -18,6 +18,10 @@ func (c *Const) string() string {
 	return fmt.Sprintf("%v", c.c)
 }
 
-func (c *Const) equals(_ Expression) bool {
-	return c.c == c.c
+func (c *Const) equals(exp Expression) bool {
+	con, ok := exp.(*Const)
+	if !ok {
+		return false
+	}
+	return c.c == con.c
 }

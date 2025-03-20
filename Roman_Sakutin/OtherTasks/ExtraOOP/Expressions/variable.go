@@ -18,6 +18,10 @@ func (v *Variable) string() string {
 	return fmt.Sprintf("%v", v.v)
 }
 
-func (v *Variable) equals(_ Expression) bool {
-	return v.v == v.v
+func (v *Variable) equals(exp Expression) bool {
+	va, ok := exp.(*Variable)
+	if !ok {
+		return false
+	}
+	return v.v == va.v
 }

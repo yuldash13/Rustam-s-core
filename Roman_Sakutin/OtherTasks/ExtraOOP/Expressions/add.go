@@ -20,5 +20,9 @@ func (a *Add) string() string {
 }
 
 func (a *Add) equals(exp Expression) bool {
-	return exp.string() == a.string()
+	add, ok := exp.(*Add)
+	if !ok {
+		return false
+	}
+	return a.a.equals(add.a) == a.b.equals(add.b)
 }

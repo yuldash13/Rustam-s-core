@@ -54,16 +54,23 @@ func main() {
 			fmt.Println(exp)
 			fmt.Println()
 		case "Проверь":
-			exp1 := NewMultiply(
+			exp01 := NewConst(1).string()
+			exp02 := NewVariable("x").string()
+			fmt.Printf("%v = %v\n", exp01, exp02)
+			eq0 := NewConst(1).equals(NewVariable("x"))
+			fmt.Println(eq0)
+			fmt.Println()
+
+			exp11 := NewMultiply(
 				NewConst(2),
 				NewVariable("x"),
 			).string()
 
-			exp2 := NewMultiply(
+			exp12 := NewMultiply(
 				NewConst(2),
 				NewVariable("x"),
 			).string()
-			fmt.Printf("%v = %v\n", exp1, exp2)
+			fmt.Printf("%v = %v\n", exp11, exp12)
 
 			eq1 := NewMultiply(
 				NewConst(2),
@@ -76,16 +83,16 @@ func main() {
 			fmt.Println(eq1)
 			fmt.Println()
 
-			exp3 := NewMultiply(
+			exp21 := NewMultiply(
 				NewConst(2),
 				NewVariable("x"),
 			).string()
 
-			exp4 := NewMultiply(
+			exp22 := NewMultiply(
 				NewVariable("x"),
 				NewConst(2),
 			).string()
-			fmt.Printf("%v = %v\n", exp3, exp4)
+			fmt.Printf("%v = %v\n", exp21, exp22)
 
 			eq2 := NewMultiply(
 				NewConst(2),
@@ -98,7 +105,7 @@ func main() {
 			fmt.Println(eq2)
 			fmt.Println()
 
-			exp5 := NewAdd(
+			exp31 := NewAdd(
 				NewMultiply(
 					NewConst(2),
 					NewVariable("x"),
@@ -109,7 +116,7 @@ func main() {
 				),
 			).string()
 
-			exp6 := NewSubtract(
+			exp32 := NewSubtract(
 				NewMultiply(
 					NewConst(2),
 					NewVariable("x"),
@@ -119,7 +126,7 @@ func main() {
 					NewVariable("x"),
 				),
 			).string()
-			fmt.Printf("%v = %v\n", exp5, exp6)
+			fmt.Printf("%v = %v\n", exp31, exp32)
 
 			eq3 := NewAdd(
 				NewMultiply(

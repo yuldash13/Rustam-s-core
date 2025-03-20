@@ -20,5 +20,9 @@ func (s *Subtract) string() string {
 }
 
 func (s *Subtract) equals(exp Expression) bool {
-	return exp.string() == s.string()
+	sub, ok := exp.(*Subtract)
+	if !ok {
+		return false
+	}
+	return s.a.equals(sub.a) == s.b.equals(sub.b)
 }

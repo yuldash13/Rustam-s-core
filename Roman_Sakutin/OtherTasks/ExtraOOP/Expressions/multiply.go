@@ -20,5 +20,9 @@ func (m *Multiply) string() string {
 }
 
 func (m *Multiply) equals(exp Expression) bool {
-	return exp.string() == m.string()
+	mul, ok := exp.(*Multiply)
+	if !ok {
+		return false
+	}
+	return m.a.equals(mul.a) == m.b.equals(mul.b)
 }

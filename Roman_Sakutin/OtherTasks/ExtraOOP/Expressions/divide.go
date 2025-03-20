@@ -20,5 +20,9 @@ func (d *Divide) string() string {
 }
 
 func (d *Divide) equals(exp Expression) bool {
-	return exp.string() == d.string()
+	div, ok := exp.(*Divide)
+	if !ok {
+		return false
+	}
+	return d.a.equals(div.a) == d.b.equals(div.b)
 }
