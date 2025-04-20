@@ -15,7 +15,7 @@ func main() {
 		fmt.Scan(&menu)
 		switch menu {
 		case "Покажи":
-			storage.ShowBooks()
+			fmt.Println(storage.ShowBooks())
 			fmt.Println()
 		case "Добавь":
 			var (
@@ -28,6 +28,7 @@ func main() {
 			fmt.Println()
 		case "Удали":
 			var name string
+			fmt.Scan("Покажи")
 			fmt.Println("Введите название книги, которую надо удалить:")
 			fmt.Scan(&name)
 			storage.DeleteBook(name)

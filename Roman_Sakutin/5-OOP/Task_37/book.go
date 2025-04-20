@@ -10,12 +10,16 @@ type Book struct {
 	release int
 }
 
-func NewBook(name string, author string, data int) *Book {
+func NewBook(name string, author string, release int) *Book {
 	return &Book{
 		name:    name,
 		author:  author,
-		release: data,
+		release: release,
 	}
+}
+
+func NewBookArr(book Book) []Book {
+	return []Book{book}
 }
 
 func (b *Book) ToString() string {

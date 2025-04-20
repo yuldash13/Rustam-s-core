@@ -5,11 +5,17 @@ import (
 )
 
 type Storage struct {
-	storage map[string]*Book
+	storage1 map[string][]Book
+	storage2 map[string][]Book
+	storage3 map[int][]Book
 }
 
 func NewStorage() *Storage {
-	return &Storage{storage: map[string]*Book{}}
+	return &Storage{
+		storage1: map[string][]Book{},
+		storage2: map[string][]Book{},
+		storage3: map[int][]Book{},
+	}
 }
 
 func (s *Storage) InitStorage() {
@@ -17,55 +23,82 @@ func (s *Storage) InitStorage() {
 	book2 := NewBook("FairyTail", "NatsuDragnil", 2003)
 	book3 := NewBook("Naruto", "NarutoUzumaki", 2001)
 
-	s.storage = map[string]*Book{
-		book1.name: book1,
-		book2.name: book2,
-		book3.name: book3,
+	bookArr1 := NewBookArr(*book1)
+	bookArr2 := NewBookArr(*book2)
+	bookArr3 := NewBookArr(*book3)
+
+	s.storage1 = map[string][]Book{
+		book1.name: bookArr1,
+		book2.name: bookArr2,
+		book3.name: bookArr3,
+	}
+	s.storage2 = map[string][]Book{
+		book1.author: bookArr1,
+		book2.author: bookArr2,
+		book3.author: bookArr3,
+	}
+	s.storage3 = map[int][]Book{
+		book1.release: bookArr1,
+		book2.release: bookArr2,
+		book3.release: bookArr3,
 	}
 }
 
-func (s *Storage) AddBook(name string, author string, data int) {
-	for key, _ := range s.storage {
-		if s.storage[name] == s.storage[key] {
-			fmt.Println("Книга уже есть.")
-			return
-		}
+func (s *Storage) AddBook(name string, author string, release int) {
+	book := NewBook(name, author, release)
+	if _, ok := s.storage1[name]; ok {
+		fmt.Println("Книга уже есть.")
+		return
 	}
-	s.storage[name] = NewBook(name, author, data)
+	s.storage1[name] = append(s.storage1[name], *book)
+	s.storage2[author] = append(s.storage2[author], *book)
+	s.storage3[release] = append(s.storage3[release], *book)
 	fmt.Println("Книга добавлена.")
 }
 
 func (s *Storage) DeleteBook(name string) {
-	for key, _ := range s.storage {
-		if s.storage[name] == s.storage[key] {
-			delete(s.storage, name)
-			fmt.Println("Книга удалена.")
-			return
+	if _, ok := s.storage1[name]; !ok {
+		fmt.Println("Такой книги нет.")
+		return
+	}
+	book := s.storage1[name][0]
+	delete(s.storage1, name)
+	for i := 0; i < len(s.storage2[book.author]); i++ {
+		if s.storage2[book.author][i].name == book.name {
+			s.storage2[book.author] = append(s.storage2[book.author][:i], s.storage2[book.author][i+1:]...)
 		}
 	}
-	fmt.Println("Такой книги нет.")
+	for i := 0; i < len(s.storage3[book.release]); i++ {
+		if s.storage3[book.release][i].name == book.name {
+			s.storage3[book.release] = append(s.storage3[book.release][:i], s.storage3[book.release][i+1:]...)
+		}
+	}
+	fmt.Println("Книга удалена.")
 }
 
-func (s *Storage) ShowBooks() {
-	for key, _ := range s.storage {
-		fmt.Println(s.storage[key].ToString())
+func (s *Storage) ShowBooks() string {
+	var str string
+	for key, _ := range s.storage1 {
+		str += fmt.Sprintln(s.storage1[key][0].ToString())
 	}
+	return str
 }
 
 func (s *Storage) SearchBooks(search string) {
-	if search == "Название" {
+	switch search {
+	case "Название":
 		var name string
 		fmt.Println("Введите название:")
 		fmt.Scan(&name)
 		s.SearchBooksName(name)
 		return
-	} else if search == "Автор" {
+	case "Автор":
 		var author string
 		fmt.Println("Введите автора:")
 		fmt.Scan(&author)
 		s.SearchBooksAuthor(author)
 		return
-	} else if search == "Год" {
+	case "Год":
 		var release int
 		fmt.Println("Введите год:")
 		fmt.Scan(&release)
@@ -75,28 +108,40 @@ func (s *Storage) SearchBooks(search string) {
 }
 
 func (s *Storage) SearchBooksName(name string) {
-	for key, _ := range s.storage {
-		if name == key {
-			fmt.Println(s.storage[key].ToString())
-			fmt.Println()
-		}
+	if _, ok := s.storage1[name]; ok {
+		fmt.Println(s.storage1[name][0].ToString())
+		fmt.Println()
 	}
 }
 
 func (s *Storage) SearchBooksAuthor(author string) {
-	for key, _ := range s.storage {
-		if author == s.storage[key].author {
-			fmt.Println(s.storage[key].ToString())
-			fmt.Println()
-		}
+	if _, ok := s.storage2[author]; ok {
+		fmt.Println(s.ToStringStr(author))
+		fmt.Println()
 	}
 }
 
 func (s *Storage) SearchBooksRelease(release int) {
-	for key, _ := range s.storage {
-		if release == s.storage[key].release {
-			fmt.Println(s.storage[key].ToString())
-			fmt.Println()
-		}
+	if _, ok := s.storage3[release]; ok {
+		fmt.Println(s.ToStringInt(release))
+		fmt.Println()
 	}
+}
+
+func (s *Storage) ToStringStr(stroke string) string {
+	var str string
+	for i := 0; i < len(s.storage2[stroke]); i++ {
+		str += s.storage2[stroke][i].ToString()
+		str += fmt.Sprintln()
+	}
+	return str
+}
+
+func (s *Storage) ToStringInt(release int) string {
+	var str string
+	for i := 0; i < len(s.storage3[release]); i++ {
+		str += s.storage3[release][i].ToString()
+		str += fmt.Sprintln()
+	}
+	return str
 }
