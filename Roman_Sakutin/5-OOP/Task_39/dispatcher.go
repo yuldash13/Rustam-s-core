@@ -21,9 +21,8 @@ func (d *Dispatcher) MakeTrain(name string) string {
 	direction := d.MakeDirection(name)
 	quantity, tickets := d.MakeTicket(direction)
 	passengers := d.SellTickets(quantity, tickets)
-	var carts, carts1 []*Cart
-	carts1 = append(carts1, d.MakeCart(passengers, carts)...)
-	train := NewTrain(carts1, quantity, tickets)
+	carts := d.MakeCart(passengers)
+	train := NewTrain(carts, quantity, tickets)
 	d.trains = append(d.trains, train)
 	return train.ToStringTrain()
 }
@@ -52,14 +51,22 @@ func (d *Dispatcher) MakeTicket(direction *Direction) (int, []*Ticket) {
 	return quantity, tickets
 }
 
-func (d *Dispatcher) MakeCart(passengers []*Passenger, carts []*Cart) []*Cart {
+func (d *Dispatcher) SaveCarts(passengers []*Passenger) []*Cart {
+	var carts []*Cart
+	carts = append(carts, d.MakeCart(passengers)...)
+	return carts
+}
+
+func (d *Dispatcher) MakeCart(passengers []*Passenger) []*Cart {
 	places := rand.Intn(11) + 10
+	var carts []*Cart
 	if len(passengers) > places {
 		cart := NewCart(places)
 		cart.passengers = append(cart.passengers, passengers[:places]...)
 		carts = append(carts, cart)
 		passengers = passengers[places:]
-		return d.MakeCart(passengers, carts)
+		carts = append(carts, d.MakeCart(passengers)...)
+		return carts
 	}
 	cart := NewCart(places)
 	cart.passengers = append(cart.passengers, passengers...)
