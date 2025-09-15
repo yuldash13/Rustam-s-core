@@ -1,54 +1,54 @@
 package main
 
-import "fmt"
-
-func main() {
-	arr := []int{2, 3, 4, 1, 5, 6, 7}
-	fmt.Println(sort31(arr))
-
-	arr1 := []int{1, 7, 7, 15}
-	arr2 := []int{2, 6, 8, 13}
-	fmt.Println(merge32(arr1, arr2))
-
-	arr3a := []int{3, 2, 2, 1}
-	fmt.Println(selectionSort33a(arr3a))
-
-	arr3b := []int{3, 2, 2, 1}
-	fmt.Println(insertionSort33b(arr3b))
-
-	//34. Число обменов равно длине массива минус один. Да.
-
-	arr11 := []int{1, 2, 7, 15}
-	arr22 := []int{2, 6, 7, 13}
-	fmt.Println(findEqual35(arr11, arr22))
-
-	arr111 := []int{1, 2, 7, 15}
-	arr222 := []int{2, 6, 7, 13}
-	fmt.Println(findMin36(arr111, arr222))
-
-	arr1111 := []int{1, 2, 7, 15}
-	arr2222 := []int{2, 6, 7, 14}
-	s := 14
-	fmt.Println(findSum37(arr1111, arr2222, s))
-
-	arr11111 := []int{1, 2, 7, 15}
-	arr22222 := []int{2, 6, 7, 14}
-	fmt.Println(findQuan38(arr11111, arr22222))
-
-	arr111111 := []int{1, 2, 7, 15}
-	arr222222 := []int{2, 6, 7, 14}
-	fmt.Println(findBig39(arr111111, arr222222))
-}
+//func main() {
+//	arr := []int{2, 3, 4, 1, 5, 6, 7}
+//	fmt.Println(sort31(arr))
+//
+//	arr1 := []int{1, 7, 7, 15}
+//	arr2 := []int{2, 6, 8, 13}
+//	fmt.Println(merge32(arr1, arr2))
+//
+//	arr3a := []int{3, 2, 2, 1}
+//	fmt.Println(selectionSort33a(arr3a))
+//
+//	arr3b := []int{3, 2, 2, 1}
+//	fmt.Println(insertionSort33b(arr3b))
+//
+//	//34. Число обменов равно длине массива минус один. Да.
+//
+//	arr11 := []int{1, 2, 7, 15}
+//	arr22 := []int{2, 6, 7, 13}
+//	fmt.Println(findEqual35(arr11, arr22))
+//
+//	arr111 := []int{1, 2, 7, 15}
+//	arr222 := []int{2, 6, 7, 13}
+//	fmt.Println(findMin36(arr111, arr222))
+//
+//	arr1111 := []int{1, 2, 7, 15}
+//	arr2222 := []int{2, 6, 7, 14}
+//	s := 14
+//	fmt.Println(findSum37(arr1111, arr2222, s))
+//
+//	arr11111 := []int{1, 2, 7, 15}
+//	arr22222 := []int{2, 6, 7, 14}
+//	fmt.Println(findQuan38(arr11111, arr22222))
+//
+//	arr111111 := []int{1, 2, 7, 15}
+//	arr222222 := []int{2, 6, 7, 14}
+//	fmt.Println(findBig39(arr111111, arr222222))
+//}
 
 func sort31(arr []int) []int {
 	var n int
-	for i := 0; n < len(arr)-1; i++ {
-		if i == len(arr)-1 {
-			i = 0
-			n++
-		}
+	for i := 0; i < len(arr)-1; i++ {
 		if arr[i] > arr[i+1] {
-			arr[i], arr[i+1] = arr[i+1], arr[i]
+			n = arr[i+1]
+			break
+		}
+	}
+	for i := 0; i < len(arr)-1; i++ {
+		if n < arr[i] {
+
 		}
 	}
 	return arr
