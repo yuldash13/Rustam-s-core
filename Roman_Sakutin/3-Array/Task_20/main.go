@@ -13,7 +13,7 @@ const (
 func main() {
 	var (
 		array [10][10]int
-		max   = 0
+		maxi  = 0
 	)
 
 	rand.Seed(time.Now().UnixNano())
@@ -36,19 +36,19 @@ func main() {
 
 	for _, row := range array {
 		for _, elem := range row {
-			if elem > max {
-				max = elem
+			if elem > maxi {
+				maxi = elem
 			}
 		}
 	}
 	fmt.Println()
-	fmt.Printf("Максимальное значение элемента массива: %d\n\n", max)
+	fmt.Printf("Максимальное значение элемента массива: %d\n\n", maxi)
 
 	fmt.Println("Массив с заменой максимального значения элемента на 0:")
 
 	for _, row := range array {
 		for _, elem := range row {
-			if elem == max {
+			if elem == maxi {
 				elem = 0
 			}
 			fmt.Print(elem, " ")
