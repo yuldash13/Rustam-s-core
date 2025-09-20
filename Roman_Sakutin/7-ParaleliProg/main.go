@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 )
@@ -20,7 +21,7 @@ func main() {
 	done := make(chan struct{})
 
 	err := Do(done, arr, &cfg)
-	close(done)
+
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -30,9 +31,9 @@ func main() {
 
 func Do(done chan struct{}, arr []int, cfg *Config) error {
 	var (
-		//ErrFactorizationCancelled = errors.New("cancelled")
-		//ErrWriterInteraction      = errors.New("writer interaction")
-		err error
+		ErrFactorizationCancelled = errors.New("cancelled")
+		ErrWriterInteraction      = errors.New("writer interaction")
+		err                       = make(chan error)
 	)
 
 	jobs := make(chan int)
@@ -59,7 +60,7 @@ func Do(done chan struct{}, arr []int, cfg *Config) error {
 			for j := range jobs {
 				select {
 				case <-done:
-					//err <- ErrFactorizationCancelled
+					err <- ErrFactorizationCancelled
 					return
 				case result <- factor(j):
 				}
@@ -80,7 +81,7 @@ func Do(done chan struct{}, arr []int, cfg *Config) error {
 			for r := range result {
 				select {
 				case <-done:
-					//err <- ErrWriterInteraction
+					err <- ErrWriterInteraction
 					return
 				default:
 					str := consumer(r)
@@ -89,9 +90,12 @@ func Do(done chan struct{}, arr []int, cfg *Config) error {
 			}
 		}()
 	}
-	Wwg.Wait()
+	go func() {
+		Wwg.Wait()
+		close(err)
+	}()
 
-	return err
+	return <-err
 }
 
 func factor(n int) []int {
