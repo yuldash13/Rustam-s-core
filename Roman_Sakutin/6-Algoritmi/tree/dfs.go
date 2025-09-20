@@ -58,12 +58,12 @@ func dfs(graph *Graph, order []string, visited map[string]bool) []string {
 //graphs := []*Graph{&tShirt, &sweater, &coat, &glasses, &socks, &shoes, &jeans}
 //
 //visited := map[string]bool{}
-//order := make([]string, 0)
+//test := make([]string, 0)
 //
 //for _, r := range graphs {
-//order = dfs(r, order, visited)
+//test = dfs(r, test, visited)
 //}
 //
-//for i := len(order) - 1; i >= 0; i-- {
-//fmt.Println(order[i])
+//for i := len(test) - 1; i >= 0; i-- {
+//fmt.Println(test[i])
 //}
