@@ -107,7 +107,7 @@ func (o *OrderPipelineImplementation) FanOut(
 	orders <-chan model.OrderProcessStarted,
 ) <-chan model.OrderFinishedExternalInteraction {
 
-	k := 1
+	k := 10
 	var output = make(chan model.OrderFinishedExternalInteraction)
 	wg := sync.WaitGroup{}
 	for i := 0; i < k; i++ {

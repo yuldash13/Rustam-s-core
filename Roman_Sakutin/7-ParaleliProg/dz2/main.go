@@ -32,7 +32,7 @@ func main() {
 	workerPool := workerpool.NewOrderWorkerPoolImplementation()
 
 	additionalActions, countChecker := getDefaultAdditionalActions()
-	workersCount := 1
+	workersCount := 10
 
 	result := workerPool.StartWorkerPool(ctx, job, additionalActions, workersCount)
 

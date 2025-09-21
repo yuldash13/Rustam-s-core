@@ -31,8 +31,8 @@ func main() {
 
 func Do(done chan struct{}, arr []int, cfg *Config) error {
 	var (
-		ErrFactorizationCancelled = errors.New("cancelled")
-		ErrWriterInteraction      = errors.New("writer interaction")
+		ErrFactorizationCancelled = errors.New("cancelled loser")
+		ErrWriterInteraction      = errors.New("writer interaction loser")
 		err                       = make(chan error)
 	)
 
