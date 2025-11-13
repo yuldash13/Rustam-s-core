@@ -4,117 +4,200 @@ import (
 	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/db"
 	"context"
 	"errors"
-	"math/rand"
-	"sync"
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
+	"time"
 )
 
 type Accounts interface {
-	GetAccounts(ctx context.Context, id int) ([]db.Account, error)
+	GetAccounts(ctx context.Context, IDUser int) ([]db.Account, error)
 	GetAccountByCurrency(ctx context.Context, id int, currency string) (*db.Account, error)
 	GetAccountByID(ctx context.Context, id int) (*db.Account, error)
 	CreateAccount(ctx context.Context, a *db.Account) (int, error)
-	DepAccount(ctx context.Context, dep int, id int) error
+	UpdateAccount(ctx context.Context, id int, balance int) error
+	DepAccount(ctx context.Context, dep db.DepAccount, id int) error
 	DeleteAccount(ctx context.Context, id int) error
 }
 
-type accounts struct {
-	data map[int]*db.Account
-	m    sync.RWMutex
+type AccountsRepo struct {
+	db *pgxpool.Pool
 }
 
-func newAccounts() *accounts {
-	return &accounts{
-		data: make(map[int]*db.Account, 1000000),
-		m:    sync.RWMutex{},
+func NewAccountRepo(db *pgxpool.Pool) *AccountsRepo {
+	return &AccountsRepo{db: db}
+}
+
+func (AR *AccountsRepo) GetAccounts(ctx context.Context, IDUser int) ([]db.Account, error) {
+	query := sq.Select(
+		"id",
+		"id_user",
+		"balance",
+		"currency",
+	).From("accounts").OrderBy("created_at desc").Where(sq.Eq{"id_user": IDUser})
+	query = query.PlaceholderFormat(sq.Dollar)
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return nil, err
 	}
-}
 
-func (rA *accounts) GetAccounts(ctx context.Context, id int) ([]db.Account, error) {
-	rA.m.RLock()
-	defer rA.m.RUnlock()
+	rows, err := AR.db.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, err
+	}
 
-	var items = make([]db.Account, 0, len(rA.data))
-
-	for _, item := range rA.data {
-		if item.IDUser == id {
-			items = append(items, *item)
+	var items []db.Account
+	for rows.Next() {
+		var item db.Account
+		if err = rows.Scan(&item.ID, &item.IDUser, &item.Balance, &item.Currency); err != nil {
+			return nil, err
 		}
+		items = append(items, item)
 	}
+
 	return items, nil
 }
 
-func (rA *accounts) GetAccountByCurrency(ctx context.Context, id int, currency string) (*db.Account, error) {
-	rA.m.RLock()
-	defer rA.m.RUnlock()
+func (AR *AccountsRepo) GetAccountByCurrency(ctx context.Context, id int, currency string) (*db.Account, error) {
+	query := sq.Select(
+		"id",
+		"id_user",
+		"balance",
+		"currency",
+	).From("accounts").
+		OrderBy("created_at desc").
+		Where(sq.And{sq.Eq{"id": id}, sq.Eq{"currency": currency}}).
+		PlaceholderFormat(sq.Dollar)
 
-	var item *db.Account
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return nil, err
+	}
 
-	for _, r := range rA.data {
-		if r.IDUser == id {
-			if r.Currency == currency {
-				item = r
-				break
-			}
+	row := AR.db.QueryRow(ctx, sql, args...)
+
+	item := &db.Account{}
+	err = row.Scan(&item.ID, &item.IDUser, &item.Balance, &item.Currency)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, db.NotFound
 		}
+		return nil, err
 	}
 	return item, nil
 }
 
-func (rA *accounts) GetAccountByID(ctx context.Context, id int) (*db.Account, error) {
-	rA.m.RLock()
-	defer rA.m.RUnlock()
+func (AR *AccountsRepo) GetAccountByID(ctx context.Context, id int) (*db.Account, error) {
+	query := sq.Select(
+		"id",
+		"id_user",
+		"balance",
+		"currency",
+	).From("accounts").
+		OrderBy("created_at desc").
+		Where(sq.Eq{"id": id}).
+		PlaceholderFormat(sq.Dollar)
 
-	for _, item := range rA.data {
-		if item.ID == id {
-			return item, nil
-		}
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return nil, err
 	}
-	return nil, db.NotFound
+
+	row := AR.db.QueryRow(ctx, sql, args...)
+
+	item := &db.Account{}
+	err = row.Scan(&item.ID, &item.IDUser, &item.Balance, &item.Currency)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, db.NotFound
+		}
+		return nil, err
+	}
+	return item, nil
 }
 
-func (rA *accounts) CreateAccount(ctx context.Context, a *db.Account) (int, error) {
-	items, _ := rA.GetAccounts(ctx, a.IDUser)
-	if ok, err := checkAcc(items, a.Currency); ok == true {
+func (AR *AccountsRepo) CreateAccount(ctx context.Context, a *db.Account) (int, error) {
+	createAt := time.Now()
+	sql, args, err := sq.Insert("accounts").
+		SetMap(map[string]interface{}{
+			"id_user":    a.IDUser,
+			"balance":    a.Balance,
+			"currency":   a.Currency,
+			"created_at": createAt,
+		}).Suffix("RETURNING id").
+		PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
 		return 0, err
 	}
 
-	id := rand.Intn(1000000)
+	var row pgx.Row
 
-	rA.m.Lock()
-	defer rA.m.Unlock()
-
-	if _, ok := rA.data[id]; ok {
-		return 0, errors.New("failed to create")
+	tx, ok := getTx(ctx)
+	if ok {
+		row = tx.QueryRow(ctx, sql, args...)
+	} else {
+		row = AR.db.QueryRow(ctx, sql, args...)
 	}
-	a.ID = id
-	rA.data[id] = a
+
+	var id int
+	if err = row.Scan(&id); err != nil {
+		return 0, err
+	}
 	return id, nil
 }
 
-func checkAcc(items []db.Account, currency string) (bool, error) {
-	if currency == "ru" || currency == "usd" || currency == "eu" {
-		for _, r := range items {
-			if r.Currency == currency {
-				return true, db.Exist
-			}
-		}
-		return false, nil
-	}
-	return true, db.Exist
-}
+func (AR *AccountsRepo) UpdateAccount(ctx context.Context, id int, balance int) error {
+	update := sq.Update("accounts").
+		Set("balance", sq.Expr("?", balance)).
+		Where(sq.Eq{"id": id}).
+		PlaceholderFormat(sq.Dollar)
 
-func (rA *accounts) DepAccount(ctx context.Context, dep int, id int) error {
-	if rA.data[id] == nil {
-		return db.NotFound
+	sql, args, err := update.ToSql()
+	if err != nil {
+		return err
 	}
-	rA.data[id].Balance += dep
+
+	_, err = AR.db.Exec(ctx, sql, args...)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (rA *accounts) DeleteAccount(ctx context.Context, id int) error {
-	if rA.data[id] == nil {
-		return db.NotFound
+func (AR *AccountsRepo) DepAccount(ctx context.Context, dep db.DepAccount, id int) error {
+	update := sq.Update("accounts").
+		Set("balance", sq.Expr("balance + ?", dep.Dep)).
+		Where(sq.Eq{"id": id}).
+		PlaceholderFormat(sq.Dollar)
+
+	sql, args, err := update.ToSql()
+	if err != nil {
+		return err
 	}
-	delete(rA.data, id)
+
+	_, err = AR.db.Exec(ctx, sql, args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (AR *AccountsRepo) DeleteAccount(ctx context.Context, id int) error {
+	del := sq.Delete("accounts").
+		Where(sq.Eq{"id": id}).
+		PlaceholderFormat(sq.Dollar)
+
+	sql, args, err := del.ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = AR.db.Exec(ctx, sql, args...)
+	if err != nil {
+		return err
+	}
 	return nil
 }

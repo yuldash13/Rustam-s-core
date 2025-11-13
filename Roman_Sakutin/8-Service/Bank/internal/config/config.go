@@ -4,6 +4,7 @@ import "github.com/kelseyhightower/envconfig"
 
 type Config struct {
 	ServerPort string `envconfig:"SERVER_PORT"`
+	DBString   string `envconfig:"DB_STRING"`
 }
 
 func ReadConfig() (*Config, error) {

@@ -5,8 +5,8 @@ import (
 	"context"
 )
 
-func (s *service) GetAccounts(ctx context.Context, id int) ([]db.Account, error) {
-	account, err := s.repo.Accounts.GetAccounts(ctx, id)
+func (s *service) GetAccounts(ctx context.Context, IDUser int) ([]db.Account, error) {
+	account, err := s.repo.Accounts.GetAccounts(ctx, IDUser)
 	if err != nil {
 		s.logger.Error(err.Error())
 		return nil, err
@@ -41,7 +41,16 @@ func (s *service) CreateAccount(ctx context.Context, a *db.Account) (int, error)
 	return account, nil
 }
 
-func (s *service) DepAccount(ctx context.Context, dep int, id int) error {
+func (s *service) UpdateAccount(ctx context.Context, id int, balance int) error {
+	err := s.repo.Accounts.UpdateAccount(ctx, id, balance)
+	if err != nil {
+		s.logger.Error(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *service) DepAccount(ctx context.Context, dep db.DepAccount, id int) error {
 	err := s.repo.Accounts.DepAccount(ctx, dep, id)
 	if err != nil {
 		s.logger.Error(err.Error())

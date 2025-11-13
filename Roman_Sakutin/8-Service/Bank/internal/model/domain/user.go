@@ -1,5 +1,14 @@
 package domain
 
+type GetUsersResponse struct {
+	Users []User
+}
+
+type GetUsersByID struct {
+	User     *User
+	Accounts GetAccountsResponse
+}
+
 type User struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
@@ -7,7 +16,7 @@ type User struct {
 	Mail        string `json:"mail"`
 }
 
-type UsersFilter struct {
+type UsersFilterRequest struct {
 	Name        string `form:"name"`
 	PhoneNumber string `form:"phone_number"`
 	Mail        string `form:"mail"`

@@ -29,7 +29,7 @@ func (a *App) SetUserRoutes(r *gin.RouterGroup, c *User) {
 }
 
 func (crU *User) GetUsers(c *gin.Context) {
-	var filters domain.UsersFilter
+	var filters domain.UsersFilterRequest
 	if err := c.ShouldBindQuery(&filters); err != nil {
 		c.JSON(http.StatusBadRequest, fmt.Sprintf("wrong parameters: %v", err))
 		return
@@ -46,10 +46,10 @@ func (crU *User) GetUsers(c *gin.Context) {
 		return
 	}
 
-	var response = make([]domain.User, 0, len(items))
+	var response domain.GetUsersResponse
 
 	for _, r := range items {
-		response = append(response, domain.User{
+		response.Users = append(response.Users, domain.User{
 			ID:          r.ID,
 			Name:        r.Name,
 			PhoneNumber: r.PhoneNumber,
@@ -68,7 +68,7 @@ func (crU *User) GetUserByID(c *gin.Context) {
 		return
 	}
 
-	item, err := crU.logic.GetUserByID(c.Request.Context(), id)
+	item, items, err := crU.logic.GetUserByID(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, db.NotFound) {
 			c.JSON(http.StatusNotFound, err.Error())
@@ -78,24 +78,45 @@ func (crU *User) GetUserByID(c *gin.Context) {
 		return
 	}
 
-	var resp = domain.User{
+	var respUser = &domain.User{
 		ID:          item.ID,
 		Name:        item.Name,
 		PhoneNumber: item.PhoneNumber,
 		Mail:        item.Mail,
 	}
-	c.JSON(http.StatusOK, resp)
+
+	var respAccounts domain.GetAccountsResponse
+
+	for _, r := range items {
+		respAccounts.Accounts = append(respAccounts.Accounts, domain.Account{
+			ID:       r.ID,
+			IDUser:   r.IDUser,
+			Balance:  r.Balance,
+			Currency: r.Currency,
+		})
+	}
+
+	var response = domain.GetUsersByID{
+		User:     respUser,
+		Accounts: respAccounts,
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 func (crU *User) CreateUser(c *gin.Context) {
-	var newUser db.User
+	var newUser domain.User
 	err := c.ShouldBindJSON(&newUser)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, fmt.Sprintf("can't paste user json: %v", err))
 		return
 	}
 
-	id, err := crU.logic.CreateUser(c.Request.Context(), &newUser)
+	id, err := crU.logic.CreateUser(c.Request.Context(), &db.User{
+		ID:          newUser.ID,
+		Name:        newUser.Name,
+		PhoneNumber: newUser.PhoneNumber,
+		Mail:        newUser.Mail,
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, fmt.Sprintf("can't create user: %v", err))
 		return
@@ -112,14 +133,19 @@ func (crU *User) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var newUser db.User
+	var newUser domain.User
 	err1 := c.ShouldBindJSON(&newUser)
 	if err1 != nil {
 		c.JSON(http.StatusBadRequest, fmt.Sprintf("can't paste user json: %v", err1))
 		return
 	}
 
-	err2 := crU.logic.UpdateUser(c.Request.Context(), id, &newUser)
+	err2 := crU.logic.UpdateUser(c.Request.Context(), &db.User{
+		ID:          id,
+		Name:        newUser.Name,
+		PhoneNumber: newUser.PhoneNumber,
+		Mail:        newUser.Mail,
+	})
 	if err2 != nil {
 		c.JSON(http.StatusInternalServerError, fmt.Sprintf("can't update user: %v", err2))
 		return

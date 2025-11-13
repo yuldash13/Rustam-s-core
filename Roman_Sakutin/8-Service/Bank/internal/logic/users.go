@@ -14,13 +14,14 @@ func (s *service) GetUsers(ctx context.Context, filters *db.UsersFilter) ([]db.U
 	return user, nil
 }
 
-func (s *service) GetUserByID(ctx context.Context, id int) (*db.User, error) {
-	user, err := s.repo.Users.GetUserByID(ctx, id)
+func (s *service) GetUserByID(ctx context.Context, id int) (*db.User, []db.Account, error) {
+	user, _, err := s.repo.Users.GetUserByID(ctx, id)
+	accounts, err := s.repo.Accounts.GetAccounts(ctx, id)
 	if err != nil {
 		s.logger.Error(err.Error())
-		return nil, err
+		return nil, nil, err
 	}
-	return user, nil
+	return user, accounts, nil
 }
 
 func (s *service) CreateUser(ctx context.Context, u *db.User) (int, error) {
@@ -32,8 +33,8 @@ func (s *service) CreateUser(ctx context.Context, u *db.User) (int, error) {
 	return id, nil
 }
 
-func (s *service) UpdateUser(ctx context.Context, id int, u *db.User) error {
-	err := s.repo.Users.UpdateUser(ctx, id, u)
+func (s *service) UpdateUser(ctx context.Context, u *db.User) error {
+	err := s.repo.Users.UpdateUser(ctx, u)
 	if err != nil {
 		s.logger.Error(err.Error())
 		return err

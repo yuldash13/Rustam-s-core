@@ -43,14 +43,13 @@ func (crA *Account) GetAccounts(c *gin.Context) {
 		return
 	}
 
-	var response = make([]domain.Account, 0, len(items))
+	var response domain.GetAccountsResponse
 
 	for _, r := range items {
-		response = append(response, domain.Account{
+		response.Accounts = append(response.Accounts, domain.Account{
 			ID:       r.ID,
 			IDUser:   r.IDUser,
 			Balance:  r.Balance,
-			Date:     r.Date,
 			Currency: r.Currency,
 		})
 	}
@@ -76,15 +75,16 @@ func (crA *Account) GetAccountByID(c *gin.Context) {
 		return
 	}
 
-	var resp = domain.Account{
-		ID:       item.ID,
-		IDUser:   item.IDUser,
-		Balance:  item.Balance,
-		Date:     item.Date,
-		Currency: item.Currency,
+	var response = domain.GetAccountsByID{
+		Account: &domain.Account{
+			ID:       item.ID,
+			IDUser:   item.IDUser,
+			Balance:  item.Balance,
+			Currency: item.Currency,
+		},
 	}
 
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, response)
 }
 
 func (crA *Account) CreateAccount(c *gin.Context) {
@@ -95,7 +95,7 @@ func (crA *Account) CreateAccount(c *gin.Context) {
 		return
 	}
 
-	var newAccount db.Account
+	var newAccount domain.Account
 	err2 := c.ShouldBindJSON(&newAccount)
 	if err2 != nil {
 		c.JSON(http.StatusBadRequest, fmt.Sprintf("can't paste account json: %v", err2))
@@ -103,7 +103,11 @@ func (crA *Account) CreateAccount(c *gin.Context) {
 	}
 	newAccount.IDUser = id1
 
-	id, err3 := crA.logic.CreateAccount(c.Request.Context(), &newAccount)
+	id, err3 := crA.logic.CreateAccount(c.Request.Context(), &db.Account{
+		IDUser:   newAccount.IDUser,
+		Balance:  newAccount.Balance,
+		Currency: newAccount.Currency,
+	})
 	if err3 != nil {
 		c.JSON(http.StatusInternalServerError, fmt.Sprintf("can't create account: %v", err3))
 		return
@@ -119,14 +123,14 @@ func (crA *Account) DepAccount(c *gin.Context) {
 		return
 	}
 
-	var dep int
-	err2 := c.ShouldBindJSON(&dep)
-	if err2 != nil {
+	var req domain.DepAccount
+	err2 := c.ShouldBindJSON(&req)
+	if err2 != nil || req.Dep <= 0 {
 		c.JSON(http.StatusBadRequest, fmt.Sprintf("can't paste balance json: %v", err2))
 		return
 	}
 
-	err3 := crA.logic.DepAccount(c.Request.Context(), dep, id)
+	err3 := crA.logic.DepAccount(c.Request.Context(), db.DepAccount{Dep: req.Dep}, id)
 	if err3 != nil {
 		if errors.Is(err3, db.NotFound) {
 			c.JSON(http.StatusNotFound, err3.Error())
