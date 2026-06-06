@@ -1,24 +1,28 @@
 package domain
 
-type GetUsersResponse struct {
-	Users []User
-}
-
-type GetUsersByID struct {
-	User     *User
-	Accounts GetAccountsResponse
-}
-
 type User struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	PhoneNumber string `json:"phone_number"`
-	Mail        string `json:"mail"`
+	ID          int64
+	Name        string
+	PhoneNumber string
+	Mail        string
 }
 
-type UsersFilterRequest struct {
-	Name        string `form:"name"`
-	PhoneNumber string `form:"phone_number"`
-	Mail        string `form:"mail"`
-	Limit       int    `form:"limit"`
+type UsersFilter struct {
+	Name        string
+	PhoneNumber string
+	Mail        string
+	Limit       int32
 }
+
+type HttpUser struct {
+	Name string
+	Role Role
+}
+
+type Role string
+
+const (
+	AdminRole  Role = "admin"
+	BankirRole Role = "bank"
+	UserRole   Role = "user"
+)

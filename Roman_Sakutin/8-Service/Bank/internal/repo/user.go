@@ -1,32 +1,34 @@
 package repo
 
 import (
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/db"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"time"
+
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/domain"
 )
 
 type Users interface {
-	GetUsers(ctx context.Context, filters *db.UsersFilter) ([]db.User, error)
-	GetUserByID(ctx context.Context, id int) (*db.User, []db.Account, error)
-	CreateUser(ctx context.Context, u *db.User) (int, error)
-	UpdateUser(ctx context.Context, u *db.User) error
+	GetUsers(ctx context.Context, filters *domain.UsersFilter) ([]domain.User, error)
+	GetUserByID(ctx context.Context, id int64) (*domain.User, []domain.Account, error)
+	CreateUser(ctx context.Context, u *domain.User) (int64, error)
+	UpdateUser(ctx context.Context, u *domain.User) error
 }
 
 type UserRepo struct {
-	db *pgxpool.Pool
+	domain *pgxpool.Pool
 }
 
-func NewUserRepo(db *pgxpool.Pool) *UserRepo {
-	return &UserRepo{db: db}
+func NewUserRepo(domain *pgxpool.Pool) *UserRepo {
+	return &UserRepo{domain: domain}
 }
 
-func (UR *UserRepo) GetUsers(ctx context.Context, filters *db.UsersFilter) ([]db.User, error) {
+func (UR *UserRepo) GetUsers(ctx context.Context, filters *domain.UsersFilter) ([]domain.User, error) {
 	query := `SELECT id, name, phone_number, mail FROM users WHERE 1=1`
 	var args []interface{}
 
@@ -53,15 +55,15 @@ func (UR *UserRepo) GetUsers(ctx context.Context, filters *db.UsersFilter) ([]db
 		query += " LIMIT " + nextArg(filters.Limit)
 	}
 
-	rows, err := UR.db.Query(ctx, query, args...)
+	rows, err := UR.domain.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var items []db.User
+	var items []domain.User
 	for rows.Next() {
-		var item db.User
+		var item domain.User
 		if err = rows.Scan(&item.ID, &item.Name, &item.PhoneNumber, &item.Mail); err != nil {
 			return nil, err
 		}
@@ -73,27 +75,27 @@ func (UR *UserRepo) GetUsers(ctx context.Context, filters *db.UsersFilter) ([]db
 	return items, nil
 }
 
-func (UR *UserRepo) GetUserByID(ctx context.Context, id int) (*db.User, []db.Account, error) {
+func (UR *UserRepo) GetUserByID(ctx context.Context, id int64) (*domain.User, []domain.Account, error) {
 	query := `
 		SELECT id, name, phone_number, mail
 		FROM users
 		WHERE id = $1
 	`
 
-	row := UR.db.QueryRow(ctx, query, id)
+	row := UR.domain.QueryRow(ctx, query, id)
 
-	item := &db.User{}
+	item := &domain.User{}
 	err := row.Scan(&item.ID, &item.Name, &item.PhoneNumber, &item.Mail)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil, db.NotFound
+			return nil, nil, domain.NotFound
 		}
 		return nil, nil, err
 	}
 	return item, nil, nil
 }
 
-func (UR *UserRepo) CreateUser(ctx context.Context, u *db.User) (int, error) {
+func (UR *UserRepo) CreateUser(ctx context.Context, u *domain.User) (int64, error) {
 	query := `
 		INSERT INTO users (name, phone_number, mail, created_at)
 		VALUES ($1, $2, $3, $4)
@@ -109,17 +111,17 @@ func (UR *UserRepo) CreateUser(ctx context.Context, u *db.User) (int, error) {
 	if ok {
 		row = tx.QueryRow(ctx, query, args...)
 	} else {
-		row = UR.db.QueryRow(ctx, query, args...)
+		row = UR.domain.QueryRow(ctx, query, args...)
 	}
 
-	var id int
+	var id int64
 	if err := row.Scan(&id); err != nil {
 		return 0, err
 	}
 	return id, nil
 }
 
-func (UR *UserRepo) UpdateUser(ctx context.Context, u *db.User) error {
+func (UR *UserRepo) UpdateUser(ctx context.Context, u *domain.User) error {
 	update := `
 		UPDATE users 
 		SET name = $1, phone_number = $2, mail = $3 
@@ -128,7 +130,7 @@ func (UR *UserRepo) UpdateUser(ctx context.Context, u *db.User) error {
 
 	args := []interface{}{u.Name, u.PhoneNumber, u.Mail, u.ID}
 
-	res, err := UR.db.Exec(ctx, update, args...)
+	res, err := UR.domain.Exec(ctx, update, args...)
 
 	if err != nil {
 		return err

@@ -1,18 +1,20 @@
 package controller
 
 import (
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/config"
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/logic"
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/config"
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/logic"
 )
 
 type App struct {
@@ -49,6 +51,7 @@ func (a *App) StartServe() {
 	}))
 
 	api := a.router.Group("/api")
+	api.Use(CheckAuthMiddleWare, callbackMW)
 	a.SetUserRoutes(api, a.user)
 	a.SetAccountRoutes(api, a.account)
 	a.SetTransferRoutes(api, a.transfer)

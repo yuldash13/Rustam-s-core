@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
+	"log"
+
+	"go.uber.org/zap"
+
 	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/config"
 	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/controller"
 	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/logic"
 	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/repo"
-	"context"
-	"go.uber.org/zap"
-	"log"
 )
 
 func main() {

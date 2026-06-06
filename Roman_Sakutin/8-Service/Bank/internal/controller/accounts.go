@@ -1,14 +1,15 @@
 package controller
 
 import (
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/logic"
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/db"
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/domain"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
+
+	"github.com/gin-gonic/gin"
+
+	candidates "Roman_Sakutin/Roman_Sakutin/8-Service/Bank/api/swagger/accounts"
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/logic"
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/domain"
 )
 
 type Account struct {
@@ -20,65 +21,56 @@ func NewAccount(logic logic.Accounts) *Account {
 }
 
 func (a *App) SetAccountRoutes(r *gin.RouterGroup, c *Account) {
+	wrapper := candidates.ServerInterfaceWrapper{
+		Handler: c,
+	}
 	pg := r.Group("/accounts")
 
-	pg.GET("/user/:id_user", c.GetAccounts)
-	pg.GET("/:id", c.GetAccountByID)
-	pg.POST("/:id_user", c.CreateAccount)
-	pg.POST("/dep/:id", c.DepAccount)
-	pg.DELETE("/:id", c.DeleteAccount)
+	pg.GET("/user/:id_user", checkUser, wrapper.GetAccounts)
+	pg.GET("/:id", checkUser, wrapper.GetAccountByID)
+	pg.POST("/:id_user", checkBankir, wrapper.CreateAccount)
+	pg.POST("/dep/:id", checkBankir, wrapper.DepAccount)
+	pg.DELETE("/:id", checkAdmin, wrapper.DeleteAccount)
 }
 
-func (crA *Account) GetAccounts(c *gin.Context) {
-	idS := c.Param("id_user")
-	id, err := strconv.Atoi(idS)
+func (crA *Account) GetAccounts(c *gin.Context, idUser candidates.AccountUserId) {
+	items, err := crA.logic.GetAccounts(c.Request.Context(), idUser)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		writeUsersError(c, http.StatusInternalServerError, fmt.Errorf("can't get accounts: %v", err))
 		return
 	}
 
-	items, err := crA.logic.GetAccounts(c.Request.Context(), id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, fmt.Sprintf("can't get accounts: %v", err))
-		return
+	response := candidates.GetAccountsResponse{
+		Accounts: make([]candidates.Account, 0, len(items)),
 	}
-
-	var response domain.GetAccountsResponse
 
 	for _, r := range items {
-		response.Accounts = append(response.Accounts, domain.Account{
-			ID:       r.ID,
-			IDUser:   r.IDUser,
+		response.Accounts = append(response.Accounts, candidates.Account{
 			Balance:  r.Balance,
 			Currency: r.Currency,
+			Id:       &r.ID,
+			IdUser:   &r.IDUser,
 		})
 	}
 
 	c.JSON(http.StatusOK, response)
 }
 
-func (crA *Account) GetAccountByID(c *gin.Context) {
-	idS := c.Param("id")
-	id, err := strconv.Atoi(idS)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-
+func (crA *Account) GetAccountByID(c *gin.Context, id candidates.AccountId) {
 	item, err := crA.logic.GetAccountByID(c.Request.Context(), id)
 	if err != nil {
-		if errors.Is(err, db.NotFound) {
-			c.JSON(http.StatusNotFound, err.Error())
+		if errors.Is(err, domain.NotFound) {
+			writeUsersError(c, http.StatusNotFound, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, fmt.Sprintf("can't get account: %v", err))
+		writeUsersError(c, http.StatusInternalServerError, fmt.Errorf("can't get account: %v", err))
 		return
 	}
 
-	var response = domain.GetAccountsByID{
-		Account: &domain.Account{
-			ID:       item.ID,
-			IDUser:   item.IDUser,
+	var response = candidates.GetAccountsByID{
+		Account: candidates.Account{
+			Id:       &item.ID,
+			IdUser:   &item.IDUser,
 			Balance:  item.Balance,
 			Currency: item.Currency,
 		},
@@ -87,77 +79,55 @@ func (crA *Account) GetAccountByID(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func (crA *Account) CreateAccount(c *gin.Context) {
-	idS := c.Param("id_user")
-	id1, err1 := strconv.Atoi(idS)
-	if err1 != nil {
-		c.JSON(http.StatusBadRequest, err1)
-		return
-	}
-
-	var newAccount domain.Account
-	err2 := c.ShouldBindJSON(&newAccount)
+func (crA *Account) CreateAccount(c *gin.Context, idUser candidates.AccountUserId) {
+	var request candidates.Account
+	err2 := c.ShouldBindJSON(&request)
 	if err2 != nil {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("can't paste account json: %v", err2))
+		writeUsersError(c, http.StatusBadRequest, fmt.Errorf("can't paste account json: %v", err2))
 		return
 	}
-	newAccount.IDUser = id1
 
-	id, err3 := crA.logic.CreateAccount(c.Request.Context(), &db.Account{
-		IDUser:   newAccount.IDUser,
-		Balance:  newAccount.Balance,
-		Currency: newAccount.Currency,
+	id, err3 := crA.logic.CreateAccount(c.Request.Context(), &domain.Account{
+		IDUser:   idUser,
+		Balance:  request.Balance,
+		Currency: request.Currency,
 	})
 	if err3 != nil {
-		c.JSON(http.StatusInternalServerError, fmt.Sprintf("can't create account: %v", err3))
+		writeUsersError(c, http.StatusInternalServerError, fmt.Errorf("can't create account: %v", err3))
 		return
 	}
 	c.JSON(http.StatusCreated, id)
 }
 
-func (crA *Account) DepAccount(c *gin.Context) {
-	idS := c.Param("id")
-	id, err1 := strconv.Atoi(idS)
-	if err1 != nil {
-		c.JSON(http.StatusBadRequest, err1)
+func (crA *Account) DepAccount(c *gin.Context, id candidates.AccountId) {
+	var request candidates.DepAccount
+	err2 := c.ShouldBindJSON(&request)
+	if err2 != nil || request.Dep <= 0 {
+		writeUsersError(c, http.StatusBadRequest, fmt.Errorf("can't paste balance json: %v", err2))
 		return
 	}
 
-	var req domain.DepAccount
-	err2 := c.ShouldBindJSON(&req)
-	if err2 != nil || req.Dep <= 0 {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("can't paste balance json: %v", err2))
-		return
-	}
-
-	err3 := crA.logic.DepAccount(c.Request.Context(), db.DepAccount{Dep: req.Dep}, id)
+	err3 := crA.logic.DepAccount(c.Request.Context(), domain.DepAccount{Dep: request.Dep}, id)
 	if err3 != nil {
-		if errors.Is(err3, db.NotFound) {
-			c.JSON(http.StatusNotFound, err3.Error())
+		if errors.Is(err3, domain.NotFound) {
+			writeUsersError(c, http.StatusNotFound, err3)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, fmt.Sprintf("can't dep account: %v", err3))
+		writeUsersError(c, http.StatusInternalServerError, fmt.Errorf("can't dep account: %v", err3))
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "account dep successfully"})
+	c.JSON(http.StatusOK, candidates.MessageResponse{Message: "account dep successfully"})
 }
 
-func (crA *Account) DeleteAccount(c *gin.Context) {
-	idS := c.Param("id")
-	id, err1 := strconv.Atoi(idS)
-	if err1 != nil {
-		c.JSON(http.StatusBadRequest, err1)
-		return
-	}
-
+func (crA *Account) DeleteAccount(c *gin.Context, id candidates.AccountId) {
 	err2 := crA.logic.DeleteAccount(c.Request.Context(), id)
 	if err2 != nil {
-		if errors.Is(err2, db.NotFound) {
-			c.JSON(http.StatusNotFound, err2.Error())
+		if errors.Is(err2, domain.NotFound) {
+			writeUsersError(c, http.StatusNotFound, err2)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, fmt.Sprintf("can't delete account: %v", err2))
+		writeUsersError(c, http.StatusInternalServerError, fmt.Errorf("can't delete account: %v", err2))
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "account deleted successfully"})
+	c.JSON(http.StatusOK, candidates.MessageResponse{Message: "account deleted successfully"})
 }

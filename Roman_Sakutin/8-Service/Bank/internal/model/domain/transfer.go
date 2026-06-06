@@ -1,22 +1,22 @@
 package domain
 
-type GetTransfersResponse struct {
-	Transfers []Transfer
-}
+type Status string
 
-type GetTransferByID struct {
-	Transfer *Transfer
-}
+const (
+	Success  Status = "success"
+	Canceled Status = "cancel"
+)
 
 type Transfer struct {
-	ID       int    `json:"id"`
-	IDFrom   int    `json:"id_from"`
-	IDTo     int    `json:"id_to"`
-	Currency string `json:"currency"`
-	Value    int    `json:"value"`
+	ID             int64
+	IDFrom         int64
+	IDTo           int64
+	Currency       string
+	Value          int64
+	OperationState Status
 }
 
 type TransferFilter struct {
-	IDFrom int `form:"id_from"`
-	IDTo   int `form:"id_to"`
+	IDFrom int64
+	IDTo   int64
 }

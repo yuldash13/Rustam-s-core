@@ -1,0 +1,158 @@
+syntax = "proto3";
+
+// Импорты нужны для:
+// - google/api/annotations.proto - аннотации для REST API (gRPC Gateway)
+// - validate/validate.proto - правила валидации полей
+// - google/protobuf/timestamp.proto - для полей created_at и updated_at
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+// Пакет - это пространство имен для ваших типов
+package library;
+
+// Где будет генерироваться Go код из этого proto файла
+option go_package = "github.com/project/library/generated/api/library";
+
+// Service Library - это описание всех операций (методов) вашего сервиса
+service Library {
+  // Добавить книгу
+  rpc AddBook(AddBookRequest) returns (AddBookResponse) {
+    option (google.api.http) = {
+      post: "/v1/library/book"
+      body: "*"
+    };
+  }
+  
+  // Обновить книгу
+  rpc UpdateBook(UpdateBookRequest) returns (UpdateBookResponse) {
+    option (google.api.http) = {
+      put: "/v1/library/book"
+      body: "*"
+    };
+  }
+
+  // Получить информацию о книге
+  rpc GetBookInfo(GetBookInfoRequest) returns (GetBookInfoResponse) {
+    option (google.api.http) = {
+      get: "/v1/library/book/{id}"
+    };
+  }
+
+  // Зарегистрировать автора
+  rpc RegisterAuthor(RegisterAuthorRequest) returns (RegisterAuthorResponse) {
+    option (google.api.http) = {
+      post: "/v1/library/author"
+      body: "*"
+    };
+  }
+
+  // Изменить информацию об авторе
+  rpc ChangeAuthorInfo(ChangeAuthorInfoRequest) returns (ChangeAuthorInfoResponse) {
+    option (google.api.http) = {
+      put: "/v1/library/author"
+      body: "*"
+    };
+  }
+
+  // Получить информацию об авторе
+  rpc GetAuthorInfo(GetAuthorInfoRequest) returns (GetAuthorInfoResponse) {
+    option (google.api.http) = {
+      get: "/v1/library/author/{id}"
+    };
+  }
+
+  // Получить все книги автора
+  rpc GetAuthorBooks(GetAuthorBooksRequest) returns (stream Book) {
+    option (google.api.http) = {
+      get: "/v1/library/author_books/{author_id}"
+    };
+  }
+}
+
+// Message Book - структура данных книги
+message Book {
+  string id = 1;                                    // ID книги (UUID)
+  string name = 2;                                  // Название книги
+  repeated string author_id = 3;                    // Список ID авторов (repeated = массив/слайс)
+  google.protobuf.Timestamp created_at = 4;        // Дата создания
+  google.protobuf.Timestamp updated_at = 5;         // Дата обновления
+}
+
+// Запрос на добавление книги
+message AddBookRequest {
+  string name = 1;                          // Название книги
+  repeated string author_ids = 2;           // Список ID авторов (UUID)
+}
+
+// Ответ на добавление книги
+message AddBookResponse {
+  Book book = 1;  // Созданная книга
+}
+
+// Запрос на обновление книги
+message UpdateBookRequest {
+  string id = 1 [(validate.rules).string.uuid = true];  // ID книги (UUID) с валидацией
+  string name = 2;                          // Новое название
+  repeated string author_ids = 3;           // Новый список авторов
+}
+
+// Ответ на обновление книги (пустой)
+message UpdateBookResponse {}
+
+// Запрос на получение информации о книге
+message GetBookInfoRequest {
+  string id = 1 [(validate.rules).string.uuid = true];  // ID книги (UUID) с валидацией
+}
+
+// Ответ с информацией о книге
+message GetBookInfoResponse {
+  Book book = 1;
+}
+
+// Запрос на регистрацию автора
+message RegisterAuthorRequest {
+  // Валидация имени автора:
+  // - regex: только буквы, цифры и пробелы между словами
+  // - min_len: минимум 1 символ
+  // - max_len: максимум 512 символов
+  string name = 1 [(validate.rules).string = {
+    pattern: "^[A-Za-z0-9]+( [A-Za-z0-9]+)*$",
+    min_len: 1,
+    max_len: 512
+  }];
+}
+
+// Ответ на регистрацию автора
+message RegisterAuthorResponse {
+  string id = 1;  // ID автора (UUID)
+}
+
+// Запрос на изменение информации об авторе
+message ChangeAuthorInfoRequest {
+  string id = 1 [(validate.rules).string.uuid = true];  // ID автора (UUID) с валидацией
+  string name = 2 [(validate.rules).string = {
+    pattern: "^[A-Za-z0-9]+( [A-Za-z0-9]+)*$",
+    min_len: 1,
+    max_len: 512
+  }];
+}
+
+// Ответ на изменение информации об авторе (пустой)
+message ChangeAuthorInfoResponse {}
+
+// Запрос на получение информации об авторе
+message GetAuthorInfoRequest {
+  string id = 1 [(validate.rules).string.uuid = true];  // ID автора (UUID) с валидацией
+}
+
+// Ответ с информацией об авторе
+message GetAuthorInfoResponse {
+  string id = 1;    // ID автора
+  string name = 2;  // Имя автора
+}
+
+// Запрос на получение всех книг автора
+message GetAuthorBooksRequest {
+  string author_id = 1 [(validate.rules).string.uuid = true];  // ID автора (UUID) с валидацией
+}

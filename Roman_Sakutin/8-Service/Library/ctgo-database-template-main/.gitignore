@@ -1,0 +1,9 @@
+/bin
+/generated
+/logs
+/.idea
+
+/cover.out
+/cover.out.tmp
+.env
+.env.local

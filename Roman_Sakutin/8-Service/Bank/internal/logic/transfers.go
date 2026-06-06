@@ -1,11 +1,12 @@
 package logic
 
 import (
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/db"
 	"context"
+
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/domain"
 )
 
-func (s *service) GetTransfers(ctx context.Context, id int, limit int) ([]db.Transfer, error) {
+func (s *service) GetTransfers(ctx context.Context, id int64, limit int64) ([]domain.Transfer, error) {
 	item, err := s.repo.Transfers.GetTransfers(ctx, id, limit)
 	if err != nil {
 		s.logger.Error(err.Error())
@@ -14,7 +15,7 @@ func (s *service) GetTransfers(ctx context.Context, id int, limit int) ([]db.Tra
 	return item, nil
 }
 
-func (s *service) GetTransferByID(ctx context.Context, id int) (*db.Transfer, error) {
+func (s *service) GetTransferByID(ctx context.Context, id int64) (*domain.Transfer, error) {
 	item, err := s.repo.Transfers.GetTransferByID(ctx, id)
 	if err != nil {
 		s.logger.Error(err.Error())
@@ -23,8 +24,8 @@ func (s *service) GetTransferByID(ctx context.Context, id int) (*db.Transfer, er
 	return item, nil
 }
 
-func (s *service) MakeTransfer(ctx context.Context, t *db.Transfer) (int, error) {
-	var id int
+func (s *service) MakeTransfer(ctx context.Context, t *domain.Transfer) (int64, error) {
+	var id int64
 	var err error
 
 	err = s.repo.Transaction.PerformTransaction(ctx, func(ctx context.Context) error {
@@ -41,11 +42,11 @@ func (s *service) MakeTransfer(ctx context.Context, t *db.Transfer) (int, error)
 		}
 
 		if from.Currency != to.Currency {
-			return db.WrongCurrency
+			return domain.WrongCurrency
 		}
 
 		if from.Balance < t.Value {
-			return db.NotEnough
+			return domain.NotEnough
 		}
 
 		from.Balance -= t.Value
@@ -73,35 +74,32 @@ func (s *service) MakeTransfer(ctx context.Context, t *db.Transfer) (int, error)
 	return id, err
 }
 
-func (s *service) CancelTransfer(ctx context.Context, id int) error {
+func (s *service) CancelTransfer(ctx context.Context, id int64) error {
 	var err error
 
-	err = s.repo.Transaction.PerformTransaction(ctx, func(ctx context.Context) error {
-		transfer, err1 := s.repo.Transfers.GetTransferByID(ctx, id)
-		if err1 != nil {
-			s.logger.Error(err1.Error())
-			return err1
-		}
-		err0 := s.repo.Transfers.CancelTransfer(ctx, id)
-		if err0 != nil {
-			s.logger.Error(err0.Error())
-			return err0
-		}
+	transfer, err1 := s.repo.Transfers.GetTransferByID(ctx, id)
+	if err1 != nil {
+		s.logger.Error(err1.Error())
+		return err1
+	}
+	err0 := s.repo.Transfers.CancelTransfer(ctx, id)
+	if err0 != nil {
+		s.logger.Error(err0.Error())
+		return err0
+	}
 
-		var newTransfer = db.Transfer{
-			IDFrom:   transfer.IDTo,
-			IDTo:     transfer.IDFrom,
-			Currency: transfer.Currency,
-			Value:    transfer.Value,
-		}
+	var newTransfer = domain.Transfer{
+		IDFrom:   transfer.IDTo,
+		IDTo:     transfer.IDFrom,
+		Currency: transfer.Currency,
+		Value:    transfer.Value,
+	}
 
-		_, err2 := s.MakeTransfer(ctx, &newTransfer)
-		if err1 != nil {
-			s.logger.Error(err2.Error())
-			return err2
-		}
-		return nil
-	})
+	_, err2 := s.MakeTransfer(ctx, &newTransfer)
+	if err1 != nil {
+		s.logger.Error(err2.Error())
+		return err2
+	}
 
 	return err
 }

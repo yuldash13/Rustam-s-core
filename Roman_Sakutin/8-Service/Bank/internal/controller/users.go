@@ -1,14 +1,16 @@
 package controller
 
 import (
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/logic"
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/db"
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/domain"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
+
+	"github.com/gin-gonic/gin"
+
+	candidates "Roman_Sakutin/Roman_Sakutin/8-Service/Bank/api/swagger/users"
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/logic"
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/domain"
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/utils"
 )
 
 type User struct {
@@ -20,136 +22,123 @@ func NewUser(logic logic.Users) *User {
 }
 
 func (a *App) SetUserRoutes(r *gin.RouterGroup, c *User) {
+	wrapper := candidates.ServerInterfaceWrapper{
+		Handler: c,
+	}
 	pg := r.Group("/users")
 
-	pg.GET("", c.GetUsers)
-	pg.GET("/user/:id", c.GetUserByID)
-	pg.POST("", c.CreateUser)
-	pg.PUT("/:id", c.UpdateUser)
+	pg.GET("", checkBankir, wrapper.GetUsers)
+	pg.GET("/user/:id", checkUser, wrapper.GetUserByID)
+	pg.POST("", checkAdmin, wrapper.CreateUser)
+	pg.PUT("/:id", checkBankir, wrapper.UpdateUser)
 }
 
-func (crU *User) GetUsers(c *gin.Context) {
-	var filters domain.UsersFilterRequest
-	if err := c.ShouldBindQuery(&filters); err != nil {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("wrong parameters: %v", err))
-		return
-	}
-
-	items, err := crU.logic.GetUsers(c.Request.Context(), &db.UsersFilter{
-		Name:        filters.Name,
-		PhoneNumber: filters.PhoneNumber,
-		Mail:        filters.Mail,
-		Limit:       filters.Limit,
+func (crU *User) GetUsers(c *gin.Context, params candidates.GetUsersParams) {
+	items, err := crU.logic.GetUsers(c.Request.Context(), &domain.UsersFilter{
+		Name:        utils.PrtTo(params.Name),
+		PhoneNumber: utils.PrtTo(params.PhoneNumber),
+		Mail:        utils.PrtTo(params.Mail),
+		Limit:       utils.PrtTo(params.Limit),
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, fmt.Sprintf("can't get users: %v", err))
+		writeUsersError(c, http.StatusInternalServerError, fmt.Errorf("can't get users: %v", err))
 		return
 	}
 
-	var response domain.GetUsersResponse
-
-	for _, r := range items {
-		response.Users = append(response.Users, domain.User{
-			ID:          r.ID,
-			Name:        r.Name,
-			PhoneNumber: r.PhoneNumber,
-			Mail:        r.Mail,
+	response := candidates.GetUsersResponse{
+		Users: make([]candidates.User, 0, len(items)),
+	}
+	for _, item := range items {
+		response.Users = append(response.Users, candidates.User{
+			Id:          &item.ID,
+			Name:        item.Name,
+			PhoneNumber: item.PhoneNumber,
+			Mail:        item.Mail,
 		})
 	}
 
 	c.JSON(http.StatusOK, response)
 }
 
-func (crU *User) GetUserByID(c *gin.Context) {
-	idS := c.Param("id")
-	id, err := strconv.Atoi(idS)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-
+func (crU *User) GetUserByID(c *gin.Context, id candidates.UserId) {
 	item, items, err := crU.logic.GetUserByID(c.Request.Context(), id)
 	if err != nil {
-		if errors.Is(err, db.NotFound) {
-			c.JSON(http.StatusNotFound, err.Error())
+		if errors.Is(err, domain.NotFound) {
+			writeUsersError(c, http.StatusNotFound, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, fmt.Sprintf("can't get user: %v", err))
+		writeUsersError(c, http.StatusInternalServerError, fmt.Errorf("can't get user: %v", err))
 		return
 	}
 
-	var respUser = &domain.User{
-		ID:          item.ID,
+	var respUser = &candidates.User{
+		Id:          &item.ID,
 		Name:        item.Name,
 		PhoneNumber: item.PhoneNumber,
 		Mail:        item.Mail,
 	}
 
-	var respAccounts domain.GetAccountsResponse
+	var respAccounts candidates.GetAccountsResponse
 
 	for _, r := range items {
-		respAccounts.Accounts = append(respAccounts.Accounts, domain.Account{
-			ID:       r.ID,
-			IDUser:   r.IDUser,
-			Balance:  r.Balance,
+		respAccounts.Accounts = append(respAccounts.Accounts, candidates.Account{
+			Balance:  int64(r.Balance),
 			Currency: r.Currency,
+			Id:       int64(r.ID),
+			IdUser:   int64(r.IDUser),
 		})
 	}
 
-	var response = domain.GetUsersByID{
-		User:     respUser,
+	var response = candidates.GetUsersByID{
 		Accounts: respAccounts,
+		User:     *respUser,
 	}
 	c.JSON(http.StatusOK, response)
 }
 
 func (crU *User) CreateUser(c *gin.Context) {
-	var newUser domain.User
-	err := c.ShouldBindJSON(&newUser)
+	var request candidates.CreateUserJSONRequestBody
+	err := c.ShouldBindJSON(&request)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("can't paste user json: %v", err))
+		writeUsersError(c, http.StatusBadRequest, fmt.Errorf("can't paste user json: %v", err))
 		return
 	}
 
-	id, err := crU.logic.CreateUser(c.Request.Context(), &db.User{
-		ID:          newUser.ID,
-		Name:        newUser.Name,
-		PhoneNumber: newUser.PhoneNumber,
-		Mail:        newUser.Mail,
+	id, err := crU.logic.CreateUser(c.Request.Context(), &domain.User{
+		Name:        request.Name,
+		PhoneNumber: request.PhoneNumber,
+		Mail:        request.Mail,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, fmt.Sprintf("can't create user: %v", err))
+		writeUsersError(c, http.StatusInternalServerError, fmt.Errorf("can't create user: %v", err))
 		return
 	}
 
 	c.JSON(http.StatusCreated, id)
 }
 
-func (crU *User) UpdateUser(c *gin.Context) {
-	idS := c.Param("id")
-	id, err := strconv.Atoi(idS)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-
-	var newUser domain.User
-	err1 := c.ShouldBindJSON(&newUser)
+func (crU *User) UpdateUser(c *gin.Context, id candidates.UserId) {
+	var request candidates.UpdateUserJSONRequestBody
+	err1 := c.ShouldBindJSON(&request)
 	if err1 != nil {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("can't paste user json: %v", err1))
+		writeUsersError(c, http.StatusBadRequest, fmt.Errorf("can't paste user json: %v", err1))
 		return
 	}
 
-	err2 := crU.logic.UpdateUser(c.Request.Context(), &db.User{
+	err2 := crU.logic.UpdateUser(c.Request.Context(), &domain.User{
 		ID:          id,
-		Name:        newUser.Name,
-		PhoneNumber: newUser.PhoneNumber,
-		Mail:        newUser.Mail,
+		Name:        request.Name,
+		PhoneNumber: request.PhoneNumber,
+		Mail:        request.Mail,
 	})
 	if err2 != nil {
-		c.JSON(http.StatusInternalServerError, fmt.Sprintf("can't update user: %v", err2))
+		writeUsersError(c, http.StatusInternalServerError, fmt.Errorf("can't update user: %v", err2))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "account updated successfully"})
+	c.JSON(http.StatusOK, candidates.MessageResponse{Message: "account updated successfully"})
+}
+
+func writeUsersError(c *gin.Context, status int, err error) {
+	c.JSON(status, candidates.Error{Message: err.Error()})
 }

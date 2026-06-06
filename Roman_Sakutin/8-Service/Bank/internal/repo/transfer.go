@@ -1,31 +1,33 @@
 package repo
 
 import (
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/db"
 	"context"
 	"errors"
+	"time"
+
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"time"
+
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/domain"
 )
 
 type Transfers interface {
-	GetTransfers(ctx context.Context, id int, limit int) ([]db.Transfer, error)
-	GetTransferByID(ctx context.Context, id int) (*db.Transfer, error)
-	MakeTransfer(ctx context.Context, t *db.Transfer) (int, error)
-	CancelTransfer(ctx context.Context, id int) error
+	GetTransfers(ctx context.Context, id int64, limit int64) ([]domain.Transfer, error)
+	GetTransferByID(ctx context.Context, id int64) (*domain.Transfer, error)
+	MakeTransfer(ctx context.Context, t *domain.Transfer) (int64, error)
+	CancelTransfer(ctx context.Context, id int64) error
 }
 
 type TransfersRepo struct {
-	db *pgxpool.Pool
+	domain *pgxpool.Pool
 }
 
-func NewTransferRepo(db *pgxpool.Pool) *TransfersRepo {
-	return &TransfersRepo{db: db}
+func NewTransferRepo(domain *pgxpool.Pool) *TransfersRepo {
+	return &TransfersRepo{domain: domain}
 }
 
-func (TR *TransfersRepo) GetTransfers(ctx context.Context, id int, limit int) ([]db.Transfer, error) {
+func (TR *TransfersRepo) GetTransfers(ctx context.Context, id int64, limit int64) ([]domain.Transfer, error) {
 	query := sq.Select(
 		"id",
 		"id_from",
@@ -44,14 +46,14 @@ func (TR *TransfersRepo) GetTransfers(ctx context.Context, id int, limit int) ([
 		return nil, err
 	}
 
-	rows, err := TR.db.Query(ctx, sql, args...)
+	rows, err := TR.domain.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, err
 	}
 
-	var items []db.Transfer
+	var items []domain.Transfer
 	for rows.Next() {
-		var item db.Transfer
+		var item domain.Transfer
 		if err = rows.Scan(&item.ID, &item.IDFrom, &item.IDTo, &item.Currency, &item.Value, &item.OperationState); err != nil {
 			return nil, err
 		}
@@ -61,7 +63,7 @@ func (TR *TransfersRepo) GetTransfers(ctx context.Context, id int, limit int) ([
 	return items, nil
 }
 
-func (TR *TransfersRepo) GetTransferByID(ctx context.Context, id int) (*db.Transfer, error) {
+func (TR *TransfersRepo) GetTransferByID(ctx context.Context, id int64) (*domain.Transfer, error) {
 	query := sq.Select(
 		"id",
 		"id_from",
@@ -77,21 +79,21 @@ func (TR *TransfersRepo) GetTransferByID(ctx context.Context, id int) (*db.Trans
 		return nil, err
 	}
 
-	row := TR.db.QueryRow(ctx, sql, args...)
+	row := TR.domain.QueryRow(ctx, sql, args...)
 
-	item := &db.Transfer{}
+	item := &domain.Transfer{}
 	err = row.Scan(&item.ID, &item.IDFrom, &item.IDTo, &item.Currency, &item.Value, &item.OperationState)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, db.NotFound
+			return nil, domain.NotFound
 		}
 		return nil, err
 	}
 	return item, nil
 }
 
-func (TR *TransfersRepo) MakeTransfer(ctx context.Context, t *db.Transfer) (int, error) {
+func (TR *TransfersRepo) MakeTransfer(ctx context.Context, t *domain.Transfer) (int64, error) {
 	createAt := time.Now()
 	sql, args, err := sq.Insert("transfers").
 		SetMap(map[string]interface{}{
@@ -99,7 +101,7 @@ func (TR *TransfersRepo) MakeTransfer(ctx context.Context, t *db.Transfer) (int,
 			"id_to":           t.IDTo,
 			"currency":        t.Currency,
 			"value":           t.Value,
-			"operation_state": db.Success,
+			"operation_state": domain.Success,
 			"created_at":      createAt,
 		}).Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar).ToSql()
@@ -113,28 +115,28 @@ func (TR *TransfersRepo) MakeTransfer(ctx context.Context, t *db.Transfer) (int,
 	if ok {
 		row = tx.QueryRow(ctx, sql, args...)
 	} else {
-		row = TR.db.QueryRow(ctx, sql, args...)
+		row = TR.domain.QueryRow(ctx, sql, args...)
 	}
 
-	var id int
+	var id int64
 	if err = row.Scan(&id); err != nil {
 		return 0, err
 	}
 	return id, nil
 }
 
-func (TR *TransfersRepo) CancelTransfer(ctx context.Context, id int) error {
+func (TR *TransfersRepo) CancelTransfer(ctx context.Context, id int64) error {
 	cancel := sq.Update("transfers").
-		Set("operation_state", sq.Expr("?", db.Canceled)).
-		Where(sq.Eq{"id": id}).
+		Set("operation_state", sq.Expr("?", domain.Canceled)).
+		Where(sq.Eq{"id": id}).Where("operation_state", domain.Success).
 		PlaceholderFormat(sq.Dollar)
 
 	sql, args, err := cancel.ToSql()
 	if err != nil {
-		return err
+		return domain.NotFound
 	}
 
-	_, err = TR.db.Exec(ctx, sql, args...)
+	_, err = TR.domain.Exec(ctx, sql, args...)
 	if err != nil {
 		return err
 	}

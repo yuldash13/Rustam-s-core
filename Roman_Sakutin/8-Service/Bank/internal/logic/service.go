@@ -1,10 +1,12 @@
 package logic
 
 import (
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/db"
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/repo"
 	"context"
+
 	"go.uber.org/zap"
+
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/domain"
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/repo"
 )
 
 type Service interface {
@@ -14,27 +16,27 @@ type Service interface {
 }
 
 type Users interface {
-	GetUsers(ctx context.Context, filters *db.UsersFilter) ([]db.User, error)
-	GetUserByID(ctx context.Context, id int) (*db.User, []db.Account, error)
-	CreateUser(ctx context.Context, u *db.User) (int, error)
-	UpdateUser(ctx context.Context, u *db.User) error
+	GetUsers(ctx context.Context, filters *domain.UsersFilter) ([]domain.User, error)
+	GetUserByID(ctx context.Context, id int64) (*domain.User, []domain.Account, error)
+	CreateUser(ctx context.Context, u *domain.User) (int64, error)
+	UpdateUser(ctx context.Context, u *domain.User) error
 }
 
 type Accounts interface {
-	GetAccounts(ctx context.Context, IDUser int) ([]db.Account, error)
-	GetAccountByCurrency(ctx context.Context, id int, currency string) (*db.Account, error)
-	GetAccountByID(ctx context.Context, id int) (*db.Account, error)
-	CreateAccount(ctx context.Context, a *db.Account) (int, error)
-	UpdateAccount(ctx context.Context, id int, balance int) error
-	DepAccount(ctx context.Context, dep db.DepAccount, id int) error
-	DeleteAccount(ctx context.Context, id int) error
+	GetAccounts(ctx context.Context, IDUser int64) ([]domain.Account, error)
+	GetAccountByCurrency(ctx context.Context, id int64, currency string) (*domain.Account, error)
+	GetAccountByID(ctx context.Context, id int64) (*domain.Account, error)
+	CreateAccount(ctx context.Context, a *domain.Account) (int64, error)
+	UpdateAccount(ctx context.Context, id int64, balance int64) error
+	DepAccount(ctx context.Context, dep domain.DepAccount, id int64) error
+	DeleteAccount(ctx context.Context, id int64) error
 }
 
 type Transfers interface {
-	GetTransfers(ctx context.Context, id int, limit int) ([]db.Transfer, error)
-	GetTransferByID(ctx context.Context, id int) (*db.Transfer, error)
-	MakeTransfer(ctx context.Context, t *db.Transfer) (int, error)
-	CancelTransfer(ctx context.Context, id int) error
+	GetTransfers(ctx context.Context, id int64, limit int64) ([]domain.Transfer, error)
+	GetTransferByID(ctx context.Context, id int64) (*domain.Transfer, error)
+	MakeTransfer(ctx context.Context, t *domain.Transfer) (int64, error)
+	CancelTransfer(ctx context.Context, id int64) error
 }
 
 type service struct {

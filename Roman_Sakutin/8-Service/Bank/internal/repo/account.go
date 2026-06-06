@@ -1,34 +1,38 @@
 package repo
 
 import (
-	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/db"
 	"context"
 	"errors"
+	"time"
+
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"time"
+
+	"Roman_Sakutin/Roman_Sakutin/8-Service/Bank/internal/model/domain"
 )
 
+//go:generate mockgen -destination account_mock.go -source account.go -package repo
+
 type Accounts interface {
-	GetAccounts(ctx context.Context, IDUser int) ([]db.Account, error)
-	GetAccountByCurrency(ctx context.Context, id int, currency string) (*db.Account, error)
-	GetAccountByID(ctx context.Context, id int) (*db.Account, error)
-	CreateAccount(ctx context.Context, a *db.Account) (int, error)
-	UpdateAccount(ctx context.Context, id int, balance int) error
-	DepAccount(ctx context.Context, dep db.DepAccount, id int) error
-	DeleteAccount(ctx context.Context, id int) error
+	GetAccounts(ctx context.Context, IDUser int64) ([]domain.Account, error)
+	GetAccountByCurrency(ctx context.Context, id int64, currency string) (*domain.Account, error)
+	GetAccountByID(ctx context.Context, id int64) (*domain.Account, error)
+	CreateAccount(ctx context.Context, a *domain.Account) (int64, error)
+	UpdateAccount(ctx context.Context, id int64, balance int64) error
+	DepAccount(ctx context.Context, dep domain.DepAccount, id int64) error
+	DeleteAccount(ctx context.Context, id int64) error
 }
 
 type AccountsRepo struct {
-	db *pgxpool.Pool
+	domain *pgxpool.Pool
 }
 
-func NewAccountRepo(db *pgxpool.Pool) *AccountsRepo {
-	return &AccountsRepo{db: db}
+func NewAccountRepo(domain *pgxpool.Pool) *AccountsRepo {
+	return &AccountsRepo{domain: domain}
 }
 
-func (AR *AccountsRepo) GetAccounts(ctx context.Context, IDUser int) ([]db.Account, error) {
+func (AR *AccountsRepo) GetAccounts(ctx context.Context, IDUser int64) ([]domain.Account, error) {
 	query := sq.Select(
 		"id",
 		"id_user",
@@ -42,14 +46,14 @@ func (AR *AccountsRepo) GetAccounts(ctx context.Context, IDUser int) ([]db.Accou
 		return nil, err
 	}
 
-	rows, err := AR.db.Query(ctx, sql, args...)
+	rows, err := AR.domain.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, err
 	}
 
-	var items []db.Account
+	var items []domain.Account
 	for rows.Next() {
-		var item db.Account
+		var item domain.Account
 		if err = rows.Scan(&item.ID, &item.IDUser, &item.Balance, &item.Currency); err != nil {
 			return nil, err
 		}
@@ -59,7 +63,7 @@ func (AR *AccountsRepo) GetAccounts(ctx context.Context, IDUser int) ([]db.Accou
 	return items, nil
 }
 
-func (AR *AccountsRepo) GetAccountByCurrency(ctx context.Context, id int, currency string) (*db.Account, error) {
+func (AR *AccountsRepo) GetAccountByCurrency(ctx context.Context, id int64, currency string) (*domain.Account, error) {
 	query := sq.Select(
 		"id",
 		"id_user",
@@ -75,21 +79,21 @@ func (AR *AccountsRepo) GetAccountByCurrency(ctx context.Context, id int, curren
 		return nil, err
 	}
 
-	row := AR.db.QueryRow(ctx, sql, args...)
+	row := AR.domain.QueryRow(ctx, sql, args...)
 
-	item := &db.Account{}
+	item := &domain.Account{}
 	err = row.Scan(&item.ID, &item.IDUser, &item.Balance, &item.Currency)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, db.NotFound
+			return nil, domain.NotFound
 		}
 		return nil, err
 	}
 	return item, nil
 }
 
-func (AR *AccountsRepo) GetAccountByID(ctx context.Context, id int) (*db.Account, error) {
+func (AR *AccountsRepo) GetAccountByID(ctx context.Context, id int64) (*domain.Account, error) {
 	query := sq.Select(
 		"id",
 		"id_user",
@@ -105,21 +109,21 @@ func (AR *AccountsRepo) GetAccountByID(ctx context.Context, id int) (*db.Account
 		return nil, err
 	}
 
-	row := AR.db.QueryRow(ctx, sql, args...)
+	row := AR.domain.QueryRow(ctx, sql, args...)
 
-	item := &db.Account{}
+	item := &domain.Account{}
 	err = row.Scan(&item.ID, &item.IDUser, &item.Balance, &item.Currency)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, db.NotFound
+			return nil, domain.NotFound
 		}
 		return nil, err
 	}
 	return item, nil
 }
 
-func (AR *AccountsRepo) CreateAccount(ctx context.Context, a *db.Account) (int, error) {
+func (AR *AccountsRepo) CreateAccount(ctx context.Context, a *domain.Account) (int64, error) {
 	createAt := time.Now()
 	sql, args, err := sq.Insert("accounts").
 		SetMap(map[string]interface{}{
@@ -139,17 +143,17 @@ func (AR *AccountsRepo) CreateAccount(ctx context.Context, a *db.Account) (int, 
 	if ok {
 		row = tx.QueryRow(ctx, sql, args...)
 	} else {
-		row = AR.db.QueryRow(ctx, sql, args...)
+		row = AR.domain.QueryRow(ctx, sql, args...)
 	}
 
-	var id int
+	var id int64
 	if err = row.Scan(&id); err != nil {
 		return 0, err
 	}
 	return id, nil
 }
 
-func (AR *AccountsRepo) UpdateAccount(ctx context.Context, id int, balance int) error {
+func (AR *AccountsRepo) UpdateAccount(ctx context.Context, id int64, balance int64) error {
 	update := sq.Update("accounts").
 		Set("balance", sq.Expr("?", balance)).
 		Where(sq.Eq{"id": id}).
@@ -160,14 +164,14 @@ func (AR *AccountsRepo) UpdateAccount(ctx context.Context, id int, balance int) 
 		return err
 	}
 
-	_, err = AR.db.Exec(ctx, sql, args...)
+	_, err = AR.domain.Exec(ctx, sql, args...)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (AR *AccountsRepo) DepAccount(ctx context.Context, dep db.DepAccount, id int) error {
+func (AR *AccountsRepo) DepAccount(ctx context.Context, dep domain.DepAccount, id int64) error {
 	update := sq.Update("accounts").
 		Set("balance", sq.Expr("balance + ?", dep.Dep)).
 		Where(sq.Eq{"id": id}).
@@ -178,14 +182,14 @@ func (AR *AccountsRepo) DepAccount(ctx context.Context, dep db.DepAccount, id in
 		return err
 	}
 
-	_, err = AR.db.Exec(ctx, sql, args...)
+	_, err = AR.domain.Exec(ctx, sql, args...)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (AR *AccountsRepo) DeleteAccount(ctx context.Context, id int) error {
+func (AR *AccountsRepo) DeleteAccount(ctx context.Context, id int64) error {
 	del := sq.Delete("accounts").
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar)
@@ -195,7 +199,7 @@ func (AR *AccountsRepo) DeleteAccount(ctx context.Context, id int) error {
 		return err
 	}
 
-	_, err = AR.db.Exec(ctx, sql, args...)
+	_, err = AR.domain.Exec(ctx, sql, args...)
 	if err != nil {
 		return err
 	}
